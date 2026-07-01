@@ -45,11 +45,25 @@ ASSETS_ROOT = Path(
         str(REFERENCE_ROOT / "extraction" / "assets"),
     )
 )
-MANIFEST_PATH = ASSETS_ROOT / "config" / "stories_manifest.json"
 
 UPLOAD_ROOT = Path(settings.upload_dir)
 if not UPLOAD_ROOT.is_absolute():
     UPLOAD_ROOT = (BACKEND_ROOT / UPLOAD_ROOT).resolve()
+
+UPLOADED_CONTENT_ROOT = UPLOAD_ROOT / "content"
+if (
+    (
+        not ASSETS_ROOT.exists()
+        or not (
+            (ASSETS_ROOT / "config" / "stories_manifest.json").exists()
+            or (ASSETS_ROOT / "stories").exists()
+        )
+    )
+    and (UPLOADED_CONTENT_ROOT / "stories").exists()
+):
+    ASSETS_ROOT = UPLOADED_CONTENT_ROOT
+
+MANIFEST_PATH = ASSETS_ROOT / "config" / "stories_manifest.json"
 
 UUID_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "ecole-platform/friend-content")
 STATUS_PUBLISHED = "published"
@@ -65,6 +79,19 @@ STORY_TITLE_FALLBACKS = {
     "alif": "حرف الألف",
     "bae": "حرف الباء",
     "zay": "حرف الزاي",
+}
+
+STORY_LETTER_FALLBACKS = {
+    "alif": "أ",
+    "bae": "ب",
+    "zay": "ز",
+}
+
+STORY_COLOR_FALLBACKS = {
+    "intro": "#00ACC1",
+    "alif": "#E53935",
+    "bae": "#43A047",
+    "zay": "#FB8C00",
 }
 
 PDF_TITLES = {
@@ -234,6 +261,9 @@ def _copy_to_uploads(source: Path, relative_path: str) -> tuple[str, int, str]:
     target.parent.mkdir(parents=True, exist_ok=True)
 
     source_checksum = _sha256_file(source)
+    if source.resolve() == target.resolve():
+        return relative_path, source.stat().st_size, source_checksum
+
     if target.exists():
         same_size = target.stat().st_size == source.stat().st_size
         if same_size and _sha256_file(target) == source_checksum:
@@ -248,6 +278,52 @@ def _parse_page_number_from_name(filename: str) -> int | None:
     if match is None:
         return None
     return int(match.group(1))
+
+
+def _first_existing_dir(*candidates: Path) -> Path | None:
+    return next((candidate for candidate in candidates if candidate.exists()), None)
+
+
+def _build_uploaded_story_manifest() -> list[dict[str, object]]:
+    stories_root = ASSETS_ROOT / "stories"
+    if not stories_root.exists():
+        return []
+
+    stories: list[dict[str, object]] = []
+    for story_dir in sorted(path for path in stories_root.iterdir() if path.is_dir()):
+        pages_dir = story_dir / "pages"
+        page_numbers = [
+            page_number
+            for page_number in (
+                _parse_page_number_from_name(path.name)
+                for path in pages_dir.glob("page_*.*")
+            )
+            if page_number is not None
+        ]
+        if not page_numbers:
+            continue
+
+        cover = next(iter(sorted(story_dir.glob("cover.*"))), None)
+        first_page = next(iter(sorted(pages_dir.glob("page_*.*"))), None)
+        story_id = story_dir.name
+        stories.append(
+            {
+                "id": story_id,
+                "title": STORY_TITLE_FALLBACKS.get(story_id, story_id),
+                "description": "",
+                "letter": STORY_LETTER_FALLBACKS.get(story_id),
+                "targetAge": [4, 7],
+                "pageCount": max(page_numbers),
+                "activities": [],
+                "coverImage": (
+                    f"stories/{story_id}/{cover.name}" if cover is not None else None
+                ),
+                "colorHex": STORY_COLOR_FALLBACKS.get(story_id),
+                "ext": first_page.suffix.lstrip(".") if first_page is not None else "png",
+            }
+        )
+
+    return stories
 
 
 async def _pick_creator_user_id(session: AsyncSession) -> uuid.UUID | None:
@@ -410,7 +486,7 @@ async def _upsert_quiz(
     quiz.title = title
     quiz.description = description
     quiz.subject = subject
-    quiz.level_band = "primaire"
+    quiz.level_band = "1AEP"
     quiz.difficulty = difficulty
     quiz.time_limit_minutes = 5
     quiz.max_attempts = 3
@@ -470,11 +546,18 @@ async def _import_stories(
     creator_user_id: uuid.UUID | None,
     stats: ImportStats,
 ) -> dict[str, ContentItem]:
-    if not MANIFEST_PATH.exists():
-        raise FileNotFoundError(f"Manifest not found: {MANIFEST_PATH}")
+    if MANIFEST_PATH.exists():
+        payload = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        stories = payload.get("stories", [])
+    else:
+        stories = _build_uploaded_story_manifest()
+        if not stories:
+            raise FileNotFoundError(f"Manifest not found: {MANIFEST_PATH}")
+        print(
+            "Manifest not found; rebuilding story metadata from existing uploaded "
+            f"assets in {ASSETS_ROOT / 'stories'}"
+        )
 
-    payload = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    stories = payload.get("stories", [])
     story_items: dict[str, ContentItem] = {}
 
     for story in stories:
@@ -663,8 +746,15 @@ async def _import_coloring_books(
             "page_count": 28,
             "theme_color": "#F4B400",
             "target_age": (4, 7),
-            "source_dir": ASSETS_ROOT / "coloring-books" / "animals",
+            "source_dir": _first_existing_dir(
+                ASSETS_ROOT / "coloring-books" / "animals",
+                ASSETS_ROOT / "coloring" / "animals",
+            )
+            or ASSETS_ROOT
+            / "coloring-books"
+            / "animals",
             "cover_candidates": (
+                ASSETS_ROOT / "coloring" / "animals" / "cover.png",
                 ASSETS_ROOT / "coloring-books" / "animals" / "cover.png",
                 ASSETS_ROOT
                 / "images"
@@ -679,8 +769,15 @@ async def _import_coloring_books(
             "page_count": 5,
             "theme_color": "#43A047",
             "target_age": (4, 7),
-            "source_dir": ASSETS_ROOT / "coloring-books" / "fruits-vegetables",
+            "source_dir": _first_existing_dir(
+                ASSETS_ROOT / "coloring-books" / "fruits-vegetables",
+                ASSETS_ROOT / "coloring" / "fruits-vegetables",
+            )
+            or ASSETS_ROOT
+            / "coloring-books"
+            / "fruits-vegetables",
             "cover_candidates": (
+                ASSETS_ROOT / "coloring" / "fruits-vegetables" / "cover.png",
                 ASSETS_ROOT / "images" / "coloring-covers" / "fruits_veg_cover.png",
             ),
         },
@@ -775,8 +872,11 @@ async def _import_story_audio(
     story_items: dict[str, ContentItem],
     stats: ImportStats,
 ) -> None:
-    narration_root = ASSETS_ROOT / "audio" / "narration"
-    if not narration_root.exists():
+    narration_root = _first_existing_dir(
+        ASSETS_ROOT / "audio" / "narration",
+        ASSETS_ROOT / "audio",
+    )
+    if narration_root is None:
         _warn(stats, "Narration audio directory not found")
         return
 
@@ -816,8 +916,11 @@ async def _import_mascot_assets(
     creator_user_id: uuid.UUID | None,
     stats: ImportStats,
 ) -> None:
-    mascot_dir = ASSETS_ROOT / "images" / "mascots"
-    if not mascot_dir.exists():
+    mascot_dir = _first_existing_dir(
+        ASSETS_ROOT / "images" / "mascots",
+        ASSETS_ROOT / "mascot",
+    )
+    if mascot_dir is None:
         _warn(stats, "Mascot image directory not found")
         return
 
@@ -837,7 +940,7 @@ async def _import_mascot_assets(
             content_id=_content_uuid("mascot-asset", source.name),
             title=title,
             content_type="mascot_asset",
-            subject="branding",
+            subject="pedagogy",
             language=LANGUAGE_AR,
             description=description,
             created_by=creator_user_id,

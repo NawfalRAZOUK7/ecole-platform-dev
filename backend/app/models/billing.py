@@ -26,6 +26,7 @@ from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
+from app.models.taxonomy import Currency
 
 
 def _short_id(value: object | None) -> str:
@@ -128,7 +129,16 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
     total_amount: Mapped[float] = mapped_column(
         Numeric(12, 2), nullable=False, default=0
     )
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     issued_date: Mapped[date] = mapped_column(Date, nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
     # Phase 11B: Overdue reminder tracking
@@ -285,9 +295,6 @@ class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
 
     # Relationships
     invoice: Mapped["Invoice"] = relationship(back_populates="payment_attempts")
-    proof: Mapped["PaymentProof | None"] = relationship(
-        back_populates="payment_attempt", uselist=False
-    )
     webhook_events: Mapped[list["ProviderWebhookEvent"]] = relationship(
         back_populates="payment_attempt", cascade="all, delete-orphan"
     )
@@ -311,37 +318,6 @@ class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
         return (
             f"<PaymentAttempt id={_short_id(self.id)} status={self.status} "
             f"invoice_id={_short_id(self.invoice_id)}>"
-        )
-
-
-class PaymentProof(TimestampMixin, Base):
-    """Proof of payment (receipt, confirmation from provider)."""
-
-    __tablename__ = "payment_proofs"
-
-    payment_attempt_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("payment_attempts.id", ondelete="CASCADE"),
-        nullable=False,
-        unique=True,
-    )
-    proof_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    provider_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    source: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    received_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-
-    # Relationships
-    payment_attempt: Mapped["PaymentAttempt"] = relationship(back_populates="proof")
-
-    __table_args__ = (
-        Index("idx_payment_proofs_payment_attempt", "payment_attempt_id"),
-    )
-
-    def __repr__(self) -> str:
-        return (
-            f"<PaymentProof id={_short_id(self.id)} "
-            f"payment_attempt_id={_short_id(self.payment_attempt_id)} source={self.source}>"
         )
 
 
@@ -407,7 +383,16 @@ class FeeStructure(TimestampMixin, SchoolScopedMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     frequency: Mapped[str] = mapped_column(
         String(20), nullable=False, default=FeeFrequency.ANNUAL.value
     )

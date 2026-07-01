@@ -20,7 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, TimestampMixin, TranslatableMixin
 
 ALLOWED_SOURCE_TYPES = {"content", "quiz", "game", "coloring", "login"}
 
@@ -29,8 +29,13 @@ def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
 
 
-class RewardBadge(Base):
-    """Badge definition available to the rewards UI and award logic."""
+class RewardBadge(TranslatableMixin, Base):
+    """Badge definition available to the rewards UI and award logic.
+
+    Localized copy is migrating to the unified ``translations`` JSONB column
+    (``TranslatableMixin``); the legacy ``title_*`` / ``description_*`` columns
+    are retained during the dual-read phase. Read with ``tr("title", locale)``.
+    """
 
     __tablename__ = "reward_badges"
 

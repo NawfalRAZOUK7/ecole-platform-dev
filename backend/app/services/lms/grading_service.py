@@ -10,7 +10,7 @@ from app.core.exceptions import AuthorizationError, NotFoundError, ValidationErr
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.lms import LMSRepository
 from app.schemas.lms import GradeRequest
-from app.services.audit import AuditService
+from app.services.platform.audit import AuditService
 from app.services.lms._helpers import (
     LMSServiceBase,
     calculate_late_penalty,

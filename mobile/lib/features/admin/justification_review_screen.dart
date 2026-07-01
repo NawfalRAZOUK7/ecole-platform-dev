@@ -3,11 +3,14 @@
 /// Reference: Phase 5B (from 4A)
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_entrance.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
@@ -131,12 +134,13 @@ class JustificationReviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(_justificationsProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Justifications')),
+      appBar: AppBar(title: Text(t.t('justification.reviewTitle'))),
       body: Semantics(
         container: true,
-        label: 'Validation des justificatifs',
+        label: t.t('justification.reviewSemantics'),
         child: Column(
           children: [
             // Status filter chips
@@ -151,8 +155,10 @@ class JustificationReviewScreen extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: FilterChip(
-                        label: Text(_statusLabel(s),
-                            style: const TextStyle(fontSize: 12)),
+                        label: Text(
+                          _statusLabel(s, t),
+                          style: const TextStyle(fontSize: 12),
+                        ),
                         selected: selected,
                         onSelected: (v) => ref
                             .read(_justificationsProvider.notifier)
@@ -176,9 +182,10 @@ class JustificationReviewScreen extends ConsumerWidget {
                     color: theme.colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(state.error!,
-                      style:
-                          TextStyle(color: theme.colorScheme.onErrorContainer)),
+                  child: Text(
+                    state.error!,
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                  ),
                 ),
               ),
 
@@ -189,12 +196,16 @@ class JustificationReviewScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildList(BuildContext context, WidgetRef ref,
-      _JustificationsState state, ThemeData theme) {
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    _JustificationsState state,
+    ThemeData theme,
+  ) {
     final colors = theme.colorScheme;
 
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.items.isEmpty) {
       return Center(
@@ -202,8 +213,8 @@ class JustificationReviewScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.check_circle_outline, size: 48, color: colors.outline),
-            SizedBox(height: 16),
-            Text('Aucune justification'),
+            const SizedBox(height: 16),
+            Text(AppLocalizations.of(ref).t('admin.noJustifications')),
           ],
         ),
       );
@@ -218,9 +229,11 @@ class JustificationReviewScreen extends ConsumerWidget {
           final j = state.items[index];
           final isActionLoading = state.actionLoading.contains(j.id);
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
+          return AnimatedEntrance(
+            delay: AnimatedEntrance.stagger(index),
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,20 +255,27 @@ class JustificationReviewScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text('Motif :',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Motif :',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(j.reason, style: theme.textTheme.bodyMedium),
                   if (j.rejectionReason != null) ...[
                     const SizedBox(height: 8),
-                    Text('Raison du rejet :',
-                        style: theme.textTheme.labelSmall
-                            ?.copyWith(color: colors.error)),
+                    Text(
+                      'Raison du rejet :',
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: colors.error),
+                    ),
                     const SizedBox(height: 4),
-                    Text(j.rejectionReason!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: colors.error)),
+                    Text(
+                      j.rejectionReason!,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: colors.error),
+                    ),
                   ],
                   if (j.status == 'pending') ...[
                     const SizedBox(height: 16),
@@ -276,7 +296,7 @@ class JustificationReviewScreen extends ConsumerWidget {
                                   .read(_justificationsProvider.notifier)
                                   .approve(j.id),
                               icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Approuver'),
+                              label: Text(AppLocalizations.of(ref).t('billing.approve')),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -284,10 +304,15 @@ class JustificationReviewScreen extends ConsumerWidget {
                             child: OutlinedButton.icon(
                               onPressed: () =>
                                   _showRejectDialog(context, ref, j.id),
-                              icon: Icon(Icons.close,
-                                  size: 18, color: colors.error),
-                              label: Text('Rejeter',
-                                  style: TextStyle(color: colors.error)),
+                              icon: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: colors.error,
+                              ),
+                              label: Text(
+                                'Rejeter',
+                                style: TextStyle(color: colors.error),
+                              ),
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(color: colors.error),
                               ),
@@ -299,6 +324,7 @@ class JustificationReviewScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            ),
           );
         },
       ),
@@ -306,23 +332,24 @@ class JustificationReviewScreen extends ConsumerWidget {
   }
 
   void _showRejectDialog(BuildContext context, WidgetRef ref, String id) {
+    final t = AppLocalizations(ref.read(localeProvider));
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rejeter la justification'),
+        title: Text(t.t('justification.rejectTitle')),
         content: TextField(
           controller: controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Raison du rejet',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('justification.rejectReason'),
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(t.t('common.cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -333,25 +360,19 @@ class JustificationReviewScreen extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Rejeter'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(t.t('justification.reject')),
           ),
         ],
       ),
     );
   }
 
-  String _statusLabel(String s) {
-    switch (s) {
-      case 'pending':
-        return 'En attente';
-      case 'justified':
-        return 'Approuvées';
-      case 'rejected':
-        return 'Rejetées';
-      default:
-        return s;
-    }
+  String _statusLabel(String s, AppLocalizations t) {
+    // Enum code [s] stays the logic identifier; display is externalized.
+    final label = t.t('justification.status.$s');
+    return label == 'justification.status.$s' ? s : label;
   }
 
   IconData _statusIcon(String s) {
@@ -425,9 +446,14 @@ class _JustStatusBadge extends StatelessWidget {
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

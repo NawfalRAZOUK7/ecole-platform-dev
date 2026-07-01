@@ -1,18 +1,24 @@
-.PHONY: api-test-down api-test-status api-test-up audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status dev-init dev-reset docker-prune docs docs-schema down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up version web-install web-lint worker worker-logs mobile-run mobile-build mobile-test web-build web-test web-test-e2e web-format pre-rollout
+.PHONY: audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status design-tokens dev-init dev-reset docker-prune docs docs-schema doppler-run down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up ngrok-webhook openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-all seed-audit seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up up-doppler version web-install web-lint worker worker-logs mobile-run mobile-build mobile-clean mobile-test mobile-i18n-scan mobile-i18n-check mobile-run-sim mobile-run-iphone mobile-run-device mobile-full web-build web-test web-test-e2e web-format pre-rollout
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
 COMPOSE_STAGING = infra/docker-compose.staging.yml
 COMPOSE_PROD = infra/docker-compose.prod.yml
 COMPOSE_MONITORING = infra/docker-compose.monitoring.yml
-COMPOSE_API_TEST = infra/docker-compose.api-test.yml
 COMPOSE_ENV_FILE = .env
 
+# Standard Docker Compose (reads .env file)
 DC = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_FILE)
-DC_API_TEST = docker compose --env-file $(COMPOSE_ENV_FILE) -p ecole-api-test -f $(COMPOSE_API_TEST)
 DC_STAGING = docker compose -f $(COMPOSE_STAGING)
 DC_PROD = docker compose -f $(COMPOSE_PROD)
-DC_MONITORING = docker compose -f $(COMPOSE_MONITORING)
+DC_MONITORING = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_MONITORING)
+
+# Doppler-injected Docker Compose (no .env file needed)
+# Usage: doppler run -- make up-doppler  OR  make doppler-run
+DC_DOPPLER = docker compose -f $(COMPOSE_FILE)
+
+# ngrok port for webhook testing (PSP / external integrations)
+NGROK_PORT ?= 8000
 
 # App version (read from backend pyproject.toml, fallback to 1.0.0)
 APP_VERSION := $(shell grep -m1 '^version = ' backend/pyproject.toml 2>/dev/null | cut -d'"' -f2 || echo "1.0.0")
@@ -21,6 +27,30 @@ APP_VERSION := $(shell grep -m1 '^version = ' backend/pyproject.toml 2>/dev/null
 
 up:
 	$(DC) up -d --build
+
+# Doppler-injected variant (no .env file needed)
+up-doppler:
+	$(DC_DOPPLER) up -d --build
+
+# Wraps any command with Doppler secret injection.
+# Usage:
+#   make doppler-run CMD="make up"
+#   make doppler-run CMD="pytest backend/tests/integration/test_email_e2e.py"
+doppler-run:
+	@command -v doppler >/dev/null 2>&1 || { echo "Doppler CLI not found. Install: brew install dopplerhq/cli/doppler"; exit 1; }
+	@test -n "$(CMD)" || { echo "Usage: make doppler-run CMD=\"<command>\""; exit 1; }
+	doppler run -- $(CMD)
+
+# Expose local API on a public ngrok URL for webhook / external integration testing.
+# Usage:
+#   make ngrok-webhook              # exposes port 8000
+#   make ngrok-webhook NGROK_PORT=8010
+ngrok-webhook:
+	@command -v ngrok >/dev/null 2>&1 || { echo "ngrok not found. Install: brew install ngrok"; exit 1; }
+	@echo "Exposing http://localhost:$(NGROK_PORT) to a public ngrok URL..."
+	@echo "Authentic webhooks (PSP, etc.) can now reach your local API."
+	@echo "Use the printed https://*.ngrok-free.app URL in tests/manual/requestly-scenarios.md"
+	ngrok http $(NGROK_PORT)
 
 down:
 	$(DC) down
@@ -35,6 +65,9 @@ clean:
 	$(DC) down -v --remove-orphans
 
 # ==================== Build ====================
+
+design-tokens:
+	node scripts/generate-design-tokens.mjs
 
 build:
 	$(DC) build --no-cache
@@ -97,6 +130,11 @@ migrate-status:
 migrate-validate:
 	$(DC) exec backend python scripts/validate_migrations.py --verbose
 
+seed-all: migrate seed
+
+seed-audit:
+	$(DC) exec backend python -m app.seed_audit
+
 seed:
 	@echo "══════════════════════════════════════════════════════"
 	@echo "  Step 1/2 — Core seed (all tables)"
@@ -106,13 +144,36 @@ seed:
 	@echo "══════════════════════════════════════════════════════"
 	@echo "  Step 2/2 — Friend educational content (stories, PDFs, coloring)"
 	@echo "══════════════════════════════════════════════════════"
-	@if [ -d "../ecole-platform-reference/extraction/assets" ]; then \
+	@if $(DC) exec backend test -d /app/uploads/content/stories; then \
+		echo "  Using existing friend content assets from backend/uploads/content"; \
+		echo "  No asset copy needed."; \
+		$(DC) exec backend env FRIEND_CONTENT_ASSETS_ROOT=/app/uploads/content python -m scripts.seed_friend_content; \
+	elif [ -d "../ecole-platform-reference/extraction/assets" ]; then \
 		$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets; \
 		docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets; \
 		$(DC) exec backend python -m scripts.seed_friend_content; \
 	else \
 		echo "  Skipping friend content — ../ecole-platform-reference not found"; \
 		echo "  Run 'make seed-friend-content' manually if you have the assets."; \
+		$(DC) exec backend rm -f /app/seed-friend-report.md; \
+		now=$$(date -u +"%Y-%m-%d %H:%M UTC"); \
+		printf '%s\n' \
+			"# Friend Content Seed Report — Skipped $$now" \
+			"" \
+			"> Auto-generated by \`make seed\` because friend content assets were not found." \
+			"" \
+			"## Status" \
+			"" \
+			"Friend educational content was not imported in this run." \
+			"" \
+			"Expected assets directory:" \
+			"" \
+			"\`\`\`text" \
+			"../ecole-platform-reference/extraction/assets" \
+			"\`\`\`" \
+			"" \
+			"Run \`make seed-friend-content\` after placing the assets there." \
+			> ./seed-friend-report.md; \
 	fi
 	@docker cp ecole-backend:/app/seed-report.md ./seed-report.md 2>/dev/null || true
 	@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true
@@ -128,12 +189,18 @@ seed-core:
 	@echo "  Report: ./seed-report.md"
 
 seed-friend-content:
-	@if [ -d "../ecole-platform-reference/extraction/assets" ]; then \
+	@if $(DC) exec backend test -d /app/uploads/content/stories; then \
+		echo "  Using existing friend content assets from backend/uploads/content"; \
+		echo "  No asset copy needed."; \
+		$(DC) exec backend env FRIEND_CONTENT_ASSETS_ROOT=/app/uploads/content python -m scripts.seed_friend_content; \
+		docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true; \
+		echo "  Report: ./seed-friend-report.md"; \
+	elif [ -d "../ecole-platform-reference/extraction/assets" ]; then \
 		$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets; \
 		docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets; \
 		$(DC) exec backend python -m scripts.seed_friend_content; \
-		@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true; \
-		@echo "  Report: ./seed-friend-report.md"; \
+		docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true; \
+		echo "  Report: ./seed-friend-report.md"; \
 	else \
 		echo "ERROR: ../ecole-platform-reference/extraction/assets not found"; \
 		echo "Place friend content assets there or skip with 'make seed-core'"; \
@@ -313,14 +380,118 @@ web-format:
 
 # ==================== Mobile ====================
 
-mobile-run:
-	cd mobile && flutter run
+# Device identifiers
+IPHONE_DEVICE_ID := 00008101-000531A20C61001E
+SIMULATOR_UUID   := 5D2FCB5F-1EA7-435B-B342-939CB46DC2D7
 
-mobile-build:
-	cd mobile && flutter build apk
+# Legacy vars kept for mobile-run backward-compat
+MOBILE_DEVICE_ID    ?=
+MOBILE_FLUTTER_ARGS ?=
+MOBILE_BUNDLE_ID    ?= com.ecole.platform
 
-mobile-test:
+mobile-clean:  ## Kill Xcode build helpers, clear DerivedData, flutter clean
+	@echo "[ 1/3 ] killing Xcode build services"
+	@pkill -9 -f XCBBuildService 2>/dev/null || true
+	@echo "[ 2/3 ] clearing DerivedData"
+	@rm -rf ~/Library/Developer/Xcode/DerivedData
+	@echo "[ 3/3 ] flutter clean"
+	cd mobile && flutter clean
+
+mobile-build:  ## pub get + Xcode config + pod install + build iOS debug
+	cd mobile && flutter pub get
+	cd mobile && flutter build ios --config-only
+	cd mobile/ios && pod install
+	cd mobile && flutter build ios --debug
+
+mobile-run:  ## Generic run — Flutter device picker (simulator or any attached device)
+	@command -v flutter >/dev/null 2>&1 || { echo "Flutter CLI not found."; exit 1; }
+	@test -f mobile/.env || cp mobile/.env.example mobile/.env
+	@grep -q '^APP_ENV=' mobile/.env || printf '\nAPP_ENV=development\n' >> mobile/.env
+	@device_id="$(MOBILE_DEVICE_ID)"; \
+	if [ -z "$$device_id" ]; then \
+		device_id=$$(xcrun simctl list devices booted 2>/dev/null | sed -n 's/.*(\([0-9A-F-]\{36\}\)) (Booted).*/\1/p' | head -1); \
+	fi; \
+	cd mobile && flutter pub get; \
+	if [ -n "$$device_id" ]; then \
+		flutter run -d "$$device_id" $(MOBILE_FLUTTER_ARGS); \
+	else \
+		flutter run $(MOBILE_FLUTTER_ARGS); \
+	fi
+
+mobile-run-sim:  ## Patch .env to localhost + run on iPhone 17 simulator
+	@if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak 's#^API_BASE_URL=.*#API_BASE_URL=http://localhost:8000#' mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://localhost:8000\n' >> mobile/.env; \
+	fi
+	cd mobile && flutter run -d $(SIMULATOR_UUID)
+
+mobile-run-iphone:  ## Auto-detect USB IP → patch .env → run --profile on Nawfal's iPhone
+	@IP=$$(ipconfig getifaddr en7 2>/dev/null || ipconfig getifaddr en8 2>/dev/null); \
+	if [ -z "$$IP" ]; then \
+		echo "ERROR: No USB link-local IP found. Make sure iPhone is connected via USB."; \
+		echo "  Try: ipconfig getifaddr en7"; \
+		exit 1; \
+	fi; \
+	echo "  USB link-local IP: $$IP  →  patching mobile/.env"; \
+	if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak "s#^API_BASE_URL=.*#API_BASE_URL=http://$$IP:8000#" mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://$$IP:8000\n' >> mobile/.env; \
+	fi
+	cd mobile && flutter run --profile -d $(IPHONE_DEVICE_ID)
+
+mobile-run-device:  ## Auto-detect USB IP → patch .env → run --profile on any physical iOS device
+	@IP=$$(ipconfig getifaddr en7 2>/dev/null || ipconfig getifaddr en8 2>/dev/null); \
+	if [ -z "$$IP" ]; then \
+		echo "ERROR: No USB link-local IP found. Make sure device is connected via USB."; \
+		exit 1; \
+	fi; \
+	echo "  USB link-local IP: $$IP  →  patching mobile/.env"; \
+	if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak "s#^API_BASE_URL=.*#API_BASE_URL=http://$$IP:8000#" mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://$$IP:8000\n' >> mobile/.env; \
+	fi
+	cd mobile && flutter run --profile
+
+mobile-test:  ## Run Flutter unit tests
 	cd mobile && flutter test
+
+mobile-i18n-scan:  ## List hardcoded UI strings to externalize (informational)
+	cd mobile && node scripts/i18n_scan.mjs
+
+mobile-i18n-check:  ## CI guard — fail if hardcoded strings remain in enforced dirs
+	cd mobile && node scripts/i18n_scan.mjs --enforce
+
+mobile-full:  ## FROM SCRATCH → iPhone: clean + deps + pods + IP patch + run --profile
+	@echo "══════════════════════════════════════════════"
+	@echo "  Mobile full pipeline  (scratch → iPhone)"
+	@echo "══════════════════════════════════════════════"
+	@echo "[ 1/5 ] kill Xcode helpers + clear DerivedData"
+	@pkill -9 -f XCBBuildService 2>/dev/null || true
+	@rm -rf ~/Library/Developer/Xcode/DerivedData
+	@echo "[ 2/5 ] flutter clean + pub get"
+	cd mobile && flutter clean && flutter pub get
+	@echo "[ 3/5 ] generate Xcode config"
+	cd mobile && flutter build ios --config-only
+	@echo "[ 4/5 ] pod install"
+	cd mobile/ios && pod install
+	@echo "[ 5/5 ] detect USB IP + patch .env + flutter run --profile"
+	@IP=$$(ipconfig getifaddr en7 2>/dev/null || ipconfig getifaddr en8 2>/dev/null); \
+	if [ -z "$$IP" ]; then \
+		echo "ERROR: No USB link-local IP found. Plug in iPhone via USB, then retry."; \
+		echo "  Tip: ipconfig getifaddr en7"; \
+		exit 1; \
+	fi; \
+	echo "  USB IP: $$IP  →  updating mobile/.env"; \
+	if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak "s#^API_BASE_URL=.*#API_BASE_URL=http://$$IP:8000#" mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://$$IP:8000\n' >> mobile/.env; \
+	fi; \
+	echo "  API_BASE_URL=http://$$IP:8000"
+	cd mobile && flutter run --profile -d $(IPHONE_DEVICE_ID)
 
 # ==================== Maintenance ====================
 
@@ -350,46 +521,104 @@ version:
 
 # ==================== Test Matrix ====================
 
+.PHONY: ci-local test-integration-suite
+
 test-unit:
-	cd backend && .venv/bin/python -m pytest tests/unit --timeout=10 -q
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest tests/unit --timeout=10 -q
+
+# Run one integration suite locally, mirroring the CI matrix fan-out:
+#   make test-integration-suite SUITE=onboarding
+test-integration-suite:
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest tests/integration/api/$(SUITE) --timeout=30
+
+# Core CI gate, runnable locally before pushing (mirrors the ci.yml lint+unit path).
+ci-local:
+	cd backend && .venv/bin/ruff check app/ tests/
+	cd backend && .venv/bin/ruff format --check app/ tests/
+	cd backend && .venv/bin/python scripts/export_openapi.py --check
+	cd backend && heads=$$(.venv/bin/alembic heads | wc -l); \
+		if [ "$$heads" -gt 1 ]; then echo "ERROR: multiple alembic heads"; .venv/bin/alembic heads; exit 1; fi
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest tests/unit --timeout=10 -q
+	@echo "✓ Local CI gate passed (ruff + openapi + single-head + unit). Run 'make test-integration' for the full DB suite."
+
+# ==================== Dockerised tests (reuse real containers, isolated DB) ====================
+# One source of truth: the `tests` service+profile now lives INSIDE
+# infra/docker-compose.dev.yml (like ecole-minio-init). It reuses the dev
+# postgres/redis/minio/mock-oauth containers but runs against an isolated
+# `ecole_platform_test` database (real data never touched). Coverage + junit
+# land in ./test-artifacts/ on the host.
+#   make dtest        → full run; container auto-starts after health and STAYS Exited 0
+#   make dtest-unit   → quick targeted run (ephemeral, removed after)
+DC_DT = $(DC)
+
+.PHONY: dtest dtest-up dtest-seq dtest-unit dtest-integration dtest-security dtest-contract dtest-edge dtest-suite dtest-cov dtest-logs dtest-clean dtest-down
+
+dtest-up: ## Bring up the reused services for dockerised tests (waits for health)
+	$(DC) --profile tests up -d --wait postgres redis minio minio-init mock-oauth
+
+dtest: dtest-up ## Full suite + coverage; runner auto-starts after health and STAYS Exited 0 (like minio-init)
+	@echo "▶ Running backend suite (seq) — live progress below; container stays as 'ecole-tests-runner' when done."
+	$(DC) --profile tests up --force-recreate --no-deps tests
+	@echo "✓ Done. Re-read logs: docker logs ecole-tests-runner  |  Coverage: test-artifacts/manual/backend/seq/htmlcov/index.html"
+
+dtest-seq: dtest-up ## Sequential pipeline (ephemeral, removed after); stops on first failure, then combined coverage
+	$(DC_DT) --profile tests run --rm tests seq
+
+dtest-unit: dtest-up
+	$(DC_DT) --profile tests run --rm tests unit
+
+dtest-integration: dtest-up
+	$(DC_DT) --profile tests run --rm tests integration
+
+dtest-security: dtest-up
+	$(DC_DT) --profile tests run --rm tests security
+
+dtest-contract: dtest-up
+	$(DC_DT) --profile tests run --rm tests contract
+
+dtest-edge: dtest-up
+	$(DC_DT) --profile tests run --rm tests edge
+
+dtest-suite: dtest-up ## One integration suite: make dtest-suite SUITE=onboarding
+	$(DC_DT) --profile tests run --rm -e PYTEST_TARGET=tests/integration/api/$(SUITE) tests integration
+
+dtest-cov: dtest-seq ## Run sequential pipeline, then open the combined HTML coverage report
+	@echo "Coverage (host): test-artifacts/manual/backend/seq/htmlcov/index.html"
+	@command -v open >/dev/null 2>&1 && open test-artifacts/manual/backend/seq/htmlcov/index.html || true
+
+dtest-logs: ## Re-read the persistent runner's output (ecole-tests-runner)
+	$(DC) logs ecole-tests-runner
+
+dtest-clean: ## Remove the exited test-runner container (coverage in test-artifacts/ is kept)
+	-docker rm ecole-tests-runner
+
+dtest-down: ## Drop ONLY the isolated test database (keeps dev data + containers)
+	$(DC) exec -T postgres sh -c 'psql -U "$${POSTGRES_USER:-ecole}" -d postgres -c "DROP DATABASE IF EXISTS ecole_platform_test;"' || true
 
 test-integration:
-	cd backend && .venv/bin/python -m pytest tests/integration --timeout=30
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest tests/integration --timeout=30 -q
 
 test-security:
-	cd backend && .venv/bin/python -m pytest tests/security --timeout=60
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest tests/security --timeout=60 -q
 
 test-full:
-	cd backend && .venv/bin/python -m pytest --cov=app --cov-branch --cov-report=html --cov-report=term-missing
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest --cov=app --cov-branch --cov-report=html --cov-report=term-missing
 
 test-perf:
-	cd backend && .venv/bin/python -m pytest tests/performance --timeout=300 --benchmark-enable
-
-# ==================== Disposable API Test Stack ====================
-
-api-test-up:
-	$(DC_API_TEST) up -d --build postgres redis backend
-	$(DC_API_TEST) exec backend alembic upgrade head
-	$(DC_API_TEST) exec backend python -m app.seed
-	@echo "Disposable API test backend: http://localhost:8010/api/v1"
-
-api-test-down:
-	$(DC_API_TEST) down -v --remove-orphans
-
-api-test-status:
-	$(DC_API_TEST) ps
+	cd backend && set -a && [ -f .env ] && . ./.env; set +a; .venv/bin/python -m pytest tests/performance --timeout=300 --benchmark-enable
 
 test-postman:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --all
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --all
 
 test-postman-phases:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --all-phases
+	@echo "Phase-specific Postman collections were removed; running the full collection instead."
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --full-collection
 
 test-postman-scenarios:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --include-scenarios
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --include-scenarios
 
 test-postman-full:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --full-collection
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --full-collection
 
 test-load:
-	cd tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-baseline/01_logins.js}
+	cd system-tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-baseline/01_logins.js}

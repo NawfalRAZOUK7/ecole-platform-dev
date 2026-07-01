@@ -12,7 +12,13 @@
     "close": "Close",
     "edit": "Edit",
     "actions": "Actions",
-    "table": "Table"
+    "table": "Table",
+    "delete": "Delete",
+    "optional": "Optional",
+    "saved": "Saved",
+    "clear": "Clear",
+    "next": "Next",
+    "previous": "Previous"
   },
   "nav": {
     "feed": "Feed",
@@ -75,7 +81,17 @@
     "adminPrograms": "Programs",
     "adminEnrollments": "Enrollments",
     "adminEquivalences": "Equivalences",
-    "adminEligibilityRules": "Eligibility rules"
+    "adminEligibilityRules": "Eligibility rules",
+    "billingSiblingPolicy": "Sibling policy",
+    "billingLateFees": "Late fees",
+    "billingPaymentPlans": "Payment plans",
+    "calendarHolidays": "Holidays",
+    "loginHistory": "Login history",
+    "questionBank": "Question bank",
+    "rubrics": "Rubrics",
+    "timetableConstraints": "Timetable constraints",
+    "timetableGenerate": "Generate timetable",
+    "home": "Home"
   },
   "login": {
     "title": "Sign In",
@@ -87,7 +103,14 @@
     "error": {
       "invalid": "Invalid email or password",
       "locked": "Account locked",
-      "generic": "Login failed"
+      "generic": "Login failed",
+      "oauth": "OAuth login failed"
+    },
+    "oauth": {
+      "title": "Social login",
+      "google": "Continue with Google",
+      "microsoft": "Continue with Microsoft",
+      "separator": "or"
     },
     "twoFactor": {
       "title": "Two-Factor Authentication",
@@ -99,7 +122,9 @@
       "verify": "Verify",
       "useBackup": "Use backup code",
       "useApp": "Use authenticator app"
-    }
+    },
+    "forgotPassword": "Forgot password?",
+    "tagline": "Learn, teach, manage — all in one place."
   },
   "feed": {
     "title": "News Feed",
@@ -239,7 +264,10 @@
       "badgeCode": "Badge code must be between 2 and 50 characters.",
       "badgeTitle": "Badge title must stay within 120 characters.",
       "badgeIcon": "Badge icon must stay within 12 characters."
-    }
+    },
+    "classStudentsTitle": "Class students",
+    "classStudentsSubtitle": "Rewards per student",
+    "classStudentsEmpty": "No students in this class"
   },
   "games": {
     "title": "Game Configurations",
@@ -438,7 +466,9 @@
     "filters": {
       "search": "Search files...",
       "allCategories": "All categories",
-      "allTypes": "All file types"
+      "allTypes": "All file types",
+      "fromDate": "Start date",
+      "toDate": "End date"
     },
     "view": {
       "grid": "Grid view",
@@ -498,8 +528,34 @@
       "title": "Title",
       "tags": "Tags (comma-separated)",
       "description": "Description",
-      "empty": "No resources found"
-    }
+      "empty": "No resources found",
+      "type": "Type"
+    },
+    "versions": {
+      "title": "Version history",
+      "empty": "No versions available",
+      "version": "Version",
+      "date": "Date",
+      "author": "Author",
+      "size": "Size",
+      "current": "Current",
+      "restore": "Restore",
+      "noPreview": "Preview not available for this file type",
+      "confirmRestoreTitle": "Restore this version?",
+      "confirmRestoreBody": "Version v{{version}} will be restored. The current version will be kept in history."
+    },
+    "studentDocuments": {
+      "title": "Student documents",
+      "selectStudent": "Select a student",
+      "checklist": "Required documents",
+      "required": "Required",
+      "filename": "File name",
+      "size": "Size",
+      "category": "Category",
+      "file": "File"
+    },
+    "categoriesLabel": "Categories",
+    "expiryDate": "Expiry date"
   },
   "content": {
     "title": "Content Library",
@@ -823,7 +879,10 @@
     "allStatuses": "All statuses",
     "retry": "Retry payment",
     "actions": "Actions",
-    "paymentProof": "Payment proof"
+    "paymentProof": "Payment proof",
+    "downloadPdf": "Download PDF",
+    "downloadReceipt": "Download receipt",
+    "pdfLanguage": "PDF language"
   },
   "activities": {
     "title": "Activities",
@@ -958,7 +1017,11 @@
     "downloadCodes": "Download Codes",
     "disableTitle": "Disable Two-Factor Authentication",
     "disableInstructions": "Enter your authenticator code or a backup code to disable 2FA.",
-    "codePlaceholder": "Code or backup code"
+    "codePlaceholder": "Code or backup code",
+    "copyCodes": "Copy codes",
+    "copied": "Copied!",
+    "backupConfirm": "I have saved my backup codes in a safe place.",
+    "qrAlt": "Two-factor authentication QR code"
   },
   "studentSubmission": {
     "title": "Submit Work",
@@ -1057,7 +1120,8 @@
     "export": "Export",
     "exportReady": "{{format}} export ready",
     "exportFailed": "Grade export failed",
-    "noData": "No grade data available"
+    "noData": "No grade data available",
+    "programFilter": "Filter by program"
   },
   "budgets": {
     "title": "Budgets",
@@ -1163,7 +1227,10 @@
     "rate_limit": "Too many requests",
     "not_found": "Resource not found",
     "network": "Network error",
-    "unknown": "Unknown error"
+    "unknown": "Unknown error",
+    "boundaryTitle": "Something went wrong",
+    "boundaryMessage": "An unexpected error occurred. Please try again.",
+    "generic": "Something went wrong."
   },
   "admin": {
     "dashboard": {
@@ -1179,8 +1246,9 @@
       "starsAwardedWeek": "Stars Awarded This Week",
       "starsAwardedMonth": "Stars Awarded This Month",
       "mostActiveClass": "Most Active Class",
-      "recentBadgeUnlocks": "Recent Badge Unlocks",
-      "gamificationUnavailable": "The current backend build does not expose /api/v1/rewards/analytics yet, so these metrics are unavailable."
+      "recentBadgeUnlocks": "Recent Reward Events",
+      "gamificationUnavailable": "The current backend build does not expose /api/v1/rewards/analytics yet, so these metrics are unavailable.",
+      "heroGreeting": "Dashboard"
     },
     "badges": {
       "title": "Badge Management",
@@ -1376,8 +1444,11 @@
           "PROMOTION": "Promotion (year rollover)",
           "CORRECTION": "Correction",
           "READMISSION": "Re-admission"
-        }
-      }
+        },
+        "versionLabel": "Program version",
+        "versionPlaceholder": "Select a version"
+      },
+      "manageVersions": "Manage versions"
     },
     "enrollments": {
       "title": "Enrollments",
@@ -1400,6 +1471,48 @@
       "assignProgram": "Assign program",
       "empty": "No enrollments match these filters.",
       "viewAcademicHistory": "View academic history"
+    },
+    "eligibility": {
+      "title": "Eligibility check",
+      "choose": "Choose",
+      "eligible": "Eligible",
+      "kindLabel": "Rule type",
+      "noRules": "No rules defined",
+      "notEligible": "Not eligible",
+      "pickProgram": "Select a program",
+      "targetLabel": "Target program"
+    },
+    "eligibilityRules": {
+      "title": "Eligibility rules",
+      "subtitle": "Manage program eligibility rules",
+      "create": "Create a rule",
+      "condition": "Condition",
+      "empty": "No eligibility rules",
+      "kind": "Type",
+      "messageKey": "Message key",
+      "params": "Parameters",
+      "targetProgram": "Target program"
+    },
+    "equivalences": {
+      "title": "Program equivalences",
+      "subtitle": "Manage equivalences between programs",
+      "create": "Create an equivalence",
+      "delete": "Delete",
+      "empty": "No equivalences",
+      "from": "From",
+      "to": "To",
+      "kind": "Type",
+      "note": "Note"
+    },
+    "versions": {
+      "title": "Program versions",
+      "create": "Create a version",
+      "description": "Description",
+      "effectiveFrom": "Effective from",
+      "empty": "No versions",
+      "label": "Label",
+      "retire": "Retire",
+      "retiredAt": "Retired on"
     }
   },
   "teacher": {
@@ -1479,7 +1592,10 @@
       "slot_3": "Slot 3",
       "slot_4": "Slot 4",
       "slot_5": "Slot 5",
-      "slot_6": "Slot 6"
+      "slot_6": "Slot 6",
+      "date": "Date",
+      "selectPeriod": "Select a period",
+      "slot": "Slot"
     },
     "assessments": {
       "title": "Assessments",
@@ -1550,7 +1666,18 @@
       "payments": "Payments"
     },
     "allPrograms": "All programs",
-    "programFilterLabel": "Filter by program"
+    "programFilterLabel": "Filter by program",
+    "adoption": "Adoption",
+    "authErrors": "Authentication errors",
+    "autoRefresh": "Auto refresh",
+    "breakdownTitle": "Breakdown",
+    "conversion": "Conversion",
+    "incidents": "Incidents",
+    "lastUpdated": "Last updated",
+    "latency": "Latency",
+    "prometheusSource": "Source: Prometheus",
+    "trendTitle": "Trend",
+    "usage": "Usage"
   },
   "calendar": {
     "title": "Calendar",
@@ -1616,7 +1743,10 @@
       "maybe_one": "{{count}} maybe",
       "maybe_other": "{{count}} maybe",
       "declined_one": "{{count}} declined",
-      "declined_other": "{{count}} declined"
+      "declined_other": "{{count}} declined",
+      "attending": "{{count}} attending",
+      "declined": "{{count}} declined",
+      "maybe": "{{count}} maybe"
     },
     "external": {
       "google": "Google Calendar",
@@ -1641,7 +1771,32 @@
       "recurrence": "Recurrence",
       "interval": "Interval",
       "until": "Repeat until"
-    }
+    },
+    "exportIcal": "Export iCal",
+    "holidays": {
+      "title": "Holidays",
+      "create": "Add a holiday",
+      "edit": "Edit holiday",
+      "empty": "No holidays configured",
+      "name": "Name",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "type": "Type",
+      "description": "Description",
+      "types": {
+        "national": "National",
+        "school": "School"
+      },
+      "confirmDeleteTitle": "Delete this holiday?",
+      "confirmDeleteBody": "This action cannot be undone."
+    },
+    "reminderPreferences": {
+      "title": "Reminder preferences",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "capacityValue": "{{count}} seats",
+    "eventCount": "{{count}} event(s)"
   },
   "reports": {
     "title": "Reports",
@@ -1785,7 +1940,7 @@
     "level": "Level",
     "file": "File",
     "uploading": "Uploading",
-    "scanning": "Scanning file\u2026",
+    "scanning": "Scanning file…",
     "upload": "Upload",
     "uploadSuccess": "Upload Successful!",
     "uploadSuccessMsg": "Your content has been uploaded to the school library.",
@@ -1894,7 +2049,8 @@
     "videoUnsupported": "Your browser does not support the video tag.",
     "audioUnsupported": "Your browser does not support the audio tag.",
     "interactiveHint": "This content opens in a new window.",
-    "openInteractive": "Open Content"
+    "openInteractive": "Open Content",
+    "open": "Open"
   },
   "studentQuiz": {
     "title": "Quizzes",
@@ -1916,7 +2072,9 @@
     "dragDropHint": "Assign each item to a zone using the dropdown",
     "selectZone": "Select zone",
     "matchHint": "Match each left item with its right pair",
-    "selectMatch": "Select match"
+    "selectMatch": "Select match",
+    "listen": "Listen to the question",
+    "recommended": "Recommended for you"
   },
   "quizAnalytics": {
     "subtitle": "Review participation, average performance, and the questions that students found hardest.",
@@ -1976,7 +2134,8 @@
       "reviewQueue": "Review Queue",
       "quizzes": "Quizzes",
       "analytics": "Analytics",
-      "pending": "pending"
+      "pending": "pending",
+      "review": "Review queue"
     },
     "content": {
       "title": "Content Library",
@@ -1993,7 +2152,8 @@
       "tabs": {
         "managed": "Managed content",
         "library": "Library browse"
-      }
+      },
+      "ageHintSuffix": "years"
     },
     "contentTypes": {
       "video": "Video",
@@ -2015,16 +2175,31 @@
       "themeColor": "Theme Color"
     },
     "subjects": {
-      "math": "Mathematics",
-      "french": "French",
+      "accounting": "Accounting",
+      "activite_scientifique": "Scientific activity",
+      "amazigh": "Amazigh",
       "arabic": "Arabic",
-      "science": "Science",
-      "history": "History",
-      "geography": "Geography",
+      "arabic_letters": "Arabic letters",
+      "art": "Arts",
+      "civic": "Civic education",
+      "economics": "Economics",
       "english": "English",
-      "islamic_studies": "Islamic Studies",
-      "art": "Art",
-      "sport": "Sport"
+      "french": "French",
+      "histoire_geo": "Social studies",
+      "informatique": "Computing",
+      "islamic": "Islamic education",
+      "literacy": "Literacy",
+      "math": "Mathematics",
+      "music": "Music",
+      "pedagogy": "Pedagogy",
+      "philosophy": "Philosophy",
+      "physique_chimie": "Physics-Chemistry",
+      "quranic": "Quranic education",
+      "sport": "Physical education",
+      "svt": "Life & earth sciences",
+      "technology": "Technology",
+      "vocabulary": "Vocabulary",
+      "other": "Other (custom)"
     },
     "statuses": {
       "draft": "Draft",
@@ -2044,6 +2219,7 @@
       "contentType": "Content Type",
       "level": "Level",
       "subject": "Subject",
+      "subjectOther": "Custom subject name",
       "language": "Language",
       "mainFile": "Main File",
       "thumbnail": "Thumbnail",
@@ -2063,7 +2239,8 @@
       "bulkResults": "Upload Results",
       "bulkOk": "Success",
       "largeFileWarning": "Warning: large video file (>100 MB). Upload may take a while.",
-      "letterPlaceholder": "Optional letter, up to 3 characters"
+      "letterPlaceholder": "Optional letter, up to 3 characters",
+      "success": "Upload successful"
     },
     "edit": {
       "title": "Edit Content",
@@ -2124,7 +2301,9 @@
       "targetAge": "Target age must be between 2 and 18.",
       "targetAgeRequired": "Target age is required for stories and coloring books.",
       "targetAgeRange": "Maximum age must be greater than or equal to minimum age.",
-      "themeColor": "Theme color must be a valid hex color."
+      "themeColor": "Theme color must be a valid hex color.",
+      "subjectOther": "Custom subject name must stay within 120 characters.",
+      "subjectOtherRequired": "Enter a name for the custom subject."
     },
     "review": {
       "title": "Review Queue",
@@ -2147,7 +2326,9 @@
       "feedbackPlaceholder": "Enter your feedback...",
       "rewardPoints": "Reward Points",
       "confirmApprove": "Confirm Approval",
-      "confirmReject": "Confirm Rejection"
+      "confirmReject": "Confirm Rejection",
+      "notes": "Notes",
+      "view": "View"
     },
     "reviewStatuses": {
       "PENDING": "Pending",
@@ -2218,7 +2399,22 @@
       "previewTitle": "Quiz Preview",
       "status": "Status",
       "questionCount": "{{count}} questions",
-      "noQuestions": "No questions added yet"
+      "noQuestions": "No questions added yet",
+      "addPair": "Add a pair",
+      "alternative": "Alternative",
+      "correct": "Correct",
+      "createTitle": "Create a quiz",
+      "dragDropPreview": "Drag-and-drop preview",
+      "easy": "Easy",
+      "editTitle": "Edit quiz",
+      "exitPreview": "Exit preview",
+      "fillInPlaceholder": "Enter the answer",
+      "hard": "Hard",
+      "matchingPreview": "Matching preview",
+      "medium": "Medium",
+      "metadata": "Metadata",
+      "saved": "Quiz saved",
+      "shuffle": "Shuffle"
     },
     "analytics": {
       "title": "CMS Analytics",
@@ -2242,7 +2438,8 @@
       "empty": "No library content found",
       "submissionsTitle": "Library review submissions",
       "submissionsSubtitle": "Track content you submitted for platform review from the CMS workspace."
-    }
+    },
+    "title": "Content management"
   },
   "gdpr": {
     "title": "Privacy & GDPR",
@@ -2337,7 +2534,60 @@
       "4": "Thursday",
       "5": "Friday",
       "6": "Saturday"
-    }
+    },
+    "constraints": {
+      "title": "Timetable constraints",
+      "subtitle": "Define the constraints before running automatic generation.",
+      "global": "Global settings",
+      "academicYear": "Academic year (ID)",
+      "academicYearPlaceholder": "Academic year UUID",
+      "maxConsecutive": "Max. consecutive lessons",
+      "teacherAvailability": "Teacher availability",
+      "addAvailability": "Add availability",
+      "noAvailability": "No availability defined.",
+      "teacherId": "Teacher (ID)",
+      "teacherIdPlaceholder": "Teacher UUID",
+      "day": "Day",
+      "from": "From",
+      "until": "To",
+      "rooms": "Classrooms",
+      "addRoom": "Add a room",
+      "noRooms": "No rooms defined.",
+      "roomName": "Room name",
+      "roomNamePlaceholder": "E.g. Room 101",
+      "capacity": "Capacity"
+    },
+    "generate": {
+      "title": "Automatic generation",
+      "subtitle": "Automatically generate the timetable from the defined constraints.",
+      "triggerTitle": "Run generation",
+      "academicYear": "Academic year",
+      "noConstraints": "Please define the constraints first.",
+      "trigger": "Generate",
+      "jobStatus": "Job status",
+      "jobId": "ID",
+      "previewTitle": "{{count}} slot(s) generated",
+      "apply": "Apply",
+      "applyConfirm": "Yes, apply",
+      "applied": "{{applied}} slot(s) applied, {{skipped}} skipped.",
+      "confirmApplyTitle": "Apply the timetable",
+      "confirmApplyBody": "This action will replace existing slots. Continue?",
+      "statuses": {
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "cols": {
+        "day": "Day",
+        "time": "Time",
+        "subject": "Subject",
+        "class": "Class",
+        "teacher": "Teacher",
+        "room": "Room"
+      }
+    },
+    "deleteSlot": "Delete slot"
   },
   "billing": {
     "feeStructures": {
@@ -2402,6 +2652,55 @@
       "ACTIVE": "Active",
       "ARCHIVED": "Archived",
       "EXEMPTED": "Exempted"
+    },
+    "siblingPolicy": {
+      "title": "Sibling policy",
+      "description": "Define the discounts granted to families with several enrolled children.",
+      "maxSiblings": "Max number of siblings covered",
+      "siblingRank": "Child",
+      "discountPercent": "Discount (%)",
+      "siblingN": "Child {{n}}"
+    },
+    "lateFeePolicy": {
+      "title": "Late fee policy",
+      "description": "Configure the penalties applied to late payments.",
+      "gracePeriodDays": "Grace period (days)",
+      "feePercent": "Penalty rate",
+      "maxFeeCap": "Maximum cap",
+      "days": "days"
+    },
+    "paymentPlans": {
+      "title": "Payment plans",
+      "create": "New plan",
+      "empty": "No payment plans",
+      "notFound": "Plan not found",
+      "planName": "Plan name",
+      "student": "Student",
+      "studentId": "Student ID",
+      "totalAmount": "Total amount",
+      "installments": "Installments",
+      "installmentsLabel": "Schedule",
+      "addInstallment": "Add an installment",
+      "noInstallments": "No installments",
+      "startDate": "Start date",
+      "dueDate": "Due date",
+      "amount": "Amount",
+      "paidAt": "Payment date",
+      "progress": "Progress",
+      "createdAt": "Created on",
+      "status": "Status",
+      "statuses": {
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "installmentStatuses": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "overdue": "Overdue"
+      },
+      "invoiceId": "Invoice ID",
+      "numInstallments": "Number of installments"
     }
   },
   "messages": {
@@ -2446,7 +2745,8 @@
     "actions": {
       "viewProgress": "View progress",
       "viewGrades": "Grades",
-      "viewTimetable": "Timetable"
+      "viewTimetable": "Timetable",
+      "reviewSessions": "Review sessions"
     }
   },
   "progress": {
@@ -2491,7 +2791,290 @@
       "status": "Status",
       "from": "From",
       "fromInitial": "No previous program",
-      "to": "To"
+      "to": "To",
+      "snapshotYear": "Year",
+      "snapshotsEmpty": "No snapshots",
+      "snapshotsTitle": "Snapshots",
+      "takeSnapshot": "Take a snapshot",
+      "transcriptDownload": "Download transcript",
+      "transcriptDownloadPdf": "Download transcript (PDF)",
+      "transcriptPreviewLive": "Live preview",
+      "transcriptPreviewSnapshot": "Snapshot preview"
     }
+  },
+  "twoFactorSms": {
+    "title": "SMS Two-Factor Authentication",
+    "enableBtn": "Enable SMS 2FA",
+    "disableBtn": "Disable SMS 2FA",
+    "phoneInstructions": "Enter your phone number. We'll send you a 6-digit code by SMS.",
+    "phoneLabel": "Phone number",
+    "sendCode": "Send code",
+    "verifyInstructions": "Enter the 6-digit code sent to {{phone}}.",
+    "resend": "Resend code",
+    "disableInstructions": "Enter a code received by SMS to disable SMS 2FA."
+  },
+  "letterPuzzle": {
+    "instructions": "Build the letter: tap each picture that starts with it.",
+    "noPieces": "No pieces available.",
+    "hearLetter": "Hear the letter"
+  },
+  "generateQuiz": {
+    "button": "Generate a quiz",
+    "title": "Generate a quiz",
+    "subtitle": "From: {{title}}. A draft will be created for you to review before publishing.",
+    "thisContent": "this content",
+    "types": "Question types",
+    "count": "Number of questions",
+    "sources": "Sources",
+    "typeMcq": "MCQ",
+    "typeTrueFalse": "True / False",
+    "typeFillIn": "Fill in the blank",
+    "typeMatching": "Matching (AI)",
+    "sourceTemplate": "Templates",
+    "sourceTemplateHint": "deterministic, free",
+    "sourceAi": "AI",
+    "sourceAiHint": "via the configured provider",
+    "error": "Generation failed.",
+    "generating": "Generating…",
+    "generate": "Generate draft",
+    "created": "Draft created: {{count}} question(s).",
+    "viewQuizzes": "View my quizzes"
+  },
+  "nav.platform": "Platform",
+  "apply": {
+    "title": "Registration request",
+    "subtitle": "Choose the establishment type. Your request will be reviewed before activation.",
+    "formal": "Formal school",
+    "micro": "Micro-school / Educator",
+    "yourName": "Your name",
+    "email": "Email",
+    "phone": "Phone",
+    "city": "City",
+    "schoolName": "School name",
+    "microName": "Micro-school name",
+    "address": "Address",
+    "level": "Level (e.g. primary, middle)",
+    "neighborhood": "Neighborhood",
+    "capacity": "Capacity (children)",
+    "notes": "Message (optional)",
+    "documents": "Documents / photos (optional)",
+    "fileSelected": "file(s) selected",
+    "error": "Submission failed.",
+    "sending": "Sending…",
+    "submit": "Send request",
+    "sentTitle": "Request sent",
+    "sentBody": "Your request has been received. A platform administrator will review it. Once approved, you will receive an email with an activation link to set your password.",
+    "backToLogin": "Back to login"
+  },
+  "activate": {
+    "title": "Activate your account",
+    "subtitle": "Choose a password to finish setting up your account.",
+    "password": "Password",
+    "confirm": "Confirm password",
+    "activate": "Activate account",
+    "activating": "Activating…",
+    "tooShort": "Password must be at least 12 characters.",
+    "mismatch": "Passwords do not match.",
+    "noToken": "Invalid or incomplete activation link.",
+    "failed": "Activation failed. The link may be expired or already used.",
+    "backToLogin": "Go to login",
+    "doneTitle": "Account activated!",
+    "doneBody": "Your password has been set and your account is active. You can now log in.",
+    "goLogin": "Log in"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "instructions": "Enter your email address to receive a reset link.",
+    "submit": "Send link",
+    "sent": "A reset email has been sent. Please check your inbox.",
+    "backToLogin": "Back to login"
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Reset",
+    "mismatch": "Passwords do not match",
+    "invalidToken": "Invalid or expired reset link",
+    "strength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    }
+  },
+  "loginHistory": {
+    "title": "Login history",
+    "subtitle": "Review your recent login attempts.",
+    "empty": "No login history",
+    "date": "Date",
+    "ip": "IP address",
+    "location": "Location",
+    "userAgent": "Device",
+    "status": "Status",
+    "statuses": {
+      "success": "Successful",
+      "failed": "Failed"
+    }
+  },
+  "rubrics": {
+    "title": "Rubrics",
+    "subtitle": "Create and manage your criteria-based grading rubrics.",
+    "empty": "No rubrics",
+    "create": "Create rubric",
+    "createAndEdit": "Create and edit",
+    "edit": "Edit",
+    "grade": "Grade",
+    "duplicate": "Duplicate",
+    "editorSubtitle": "Define the criteria and performance levels.",
+    "gradingTitle": "Rubric grading",
+    "criterion": "Criterion",
+    "weight": "Weight",
+    "total": "Total",
+    "percentage": "Percentage",
+    "levelLabel": "Level",
+    "levelScore": "Score",
+    "levelDescription": "Level description",
+    "criterionName": "Criterion name",
+    "addLevel": "Level",
+    "addCriterion": "Add a criterion",
+    "studentId": "Student ID",
+    "studentIdPlaceholder": "Student's UUID or ID",
+    "saveGrade": "Save grade",
+    "gradeSaved": "Grade saved for student {{studentId}}",
+    "previousResults": "Previous grades",
+    "cols": {
+      "title": "Title",
+      "subject": "Subject",
+      "description": "Description",
+      "criteria": "Criteria",
+      "maxScore": "Max score",
+      "createdAt": "Created on",
+      "score": "Score"
+    }
+  },
+  "questionBank": {
+    "title": "Question bank",
+    "subtitle": "Manage, import and generate questions for your assessments.",
+    "empty": "No questions in the bank",
+    "addQuestion": "Add a question",
+    "importFromQuiz": "Import from a quiz",
+    "generateQuiz": "Generate a quiz",
+    "filterSubject": "Filter by subject",
+    "allTypes": "All types",
+    "allDifficulties": "All difficulties",
+    "choices": "Answer choices",
+    "choiceText": "Choice text",
+    "correct": "Correct",
+    "addChoice": "Add a choice",
+    "tags": "Tags",
+    "tagsPlaceholder": "math, algebra, fractions",
+    "cols": {
+      "text": "Question",
+      "subject": "Subject",
+      "type": "Type",
+      "difficulty": "Difficulty",
+      "tags": "Tags"
+    },
+    "types": {
+      "mcq": "MCQ",
+      "true_false": "True / False",
+      "short_answer": "Short answer",
+      "essay": "Essay"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "stats": {
+      "total": "Total"
+    },
+    "import": {
+      "title": "Import from a quiz",
+      "subtitle": "Select a quiz to import its questions into the bank.",
+      "quizId": "Quiz ID",
+      "quizIdPlaceholder": "e.g. 00000000-0000-4000-8000-000000000001",
+      "quizIdHint": "Enter the UUID of the existing quiz.",
+      "submit": "Import",
+      "imported": "{{count}} question(s) imported",
+      "skipped": "{{count}} skipped (duplicates)",
+      "previewTitle": "Imported questions"
+    },
+    "generate": {
+      "title": "Generate a quiz",
+      "subtitle": "Automatically generate a set of questions based on your criteria.",
+      "count": "Number of questions",
+      "submit": "Generate",
+      "previewTitle": "{{count}} question(s) generated",
+      "saveAll": "Save all"
+    }
+  },
+  "a11y": {
+    "mainNavigation": "Main navigation",
+    "skipToContent": "Skip to main content"
+  },
+  "breadcrumb": {
+    "label": "Breadcrumb"
+  },
+  "tabs": {
+    "list": "Tabs"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "network": {
+    "backOnline": "Back online",
+    "offline": "Offline"
+  },
+  "pagination": {
+    "navigation": "Pagination",
+    "next": "Next",
+    "previous": "Previous",
+    "pageSize": "Items per page"
+  },
+  "bridge": {
+    "availableOnMobile": "Available on mobile",
+    "availableOnWeb": "Available on web",
+    "coloringDescription": "Open the mobile app to color this page.",
+    "coloringTitle": "Coloring"
+  },
+  "memoryMatch": {
+    "moves": "{{count}} moves"
+  },
+  "sharedReview": {
+    "aiSuggestion": "AI suggestion",
+    "backToSessions": "Back to sessions",
+    "childText": "Child's text",
+    "commentPlaceholder": "Write an encouragement…",
+    "comments": "Encouragements",
+    "date": "Date",
+    "noComments": "No comments yet. Be the first to encourage!",
+    "noSessions": "No learning sessions yet.",
+    "score": "Score",
+    "send": "Send",
+    "status": "Status",
+    "subtitle": "Review recent activities and add encouragements",
+    "title": "Child's learning sessions",
+    "type": "Type"
+  },
+  "sortingGame": {
+    "progress": "Progress:"
+  },
+  "studentGames": {
+    "all": "All",
+    "backToGames": "Back to games",
+    "congrats": "Well done!",
+    "empty": "No games available. Check back later!",
+    "noCards": "No cards available.",
+    "replay": "Replay",
+    "subtitle": "Pick a game to learn while having fun!",
+    "timedOut": "Time's up",
+    "title": "My games",
+    "tryAgain": "Try again!"
+  },
+  "vocabulary": {
+    "finish": "Finish",
+    "progress": "Card",
+    "tapFlip": "Tap to flip"
   }
 }

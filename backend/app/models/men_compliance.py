@@ -20,7 +20,12 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from app.core.database import Base, SchoolScopedMixin, TimestampMixin
+from app.core.database import (
+    Base,
+    SchoolScopedMixin,
+    TimestampMixin,
+    TranslatableMixin,
+)
 
 
 def _short_id(value: object | None) -> str:
@@ -82,7 +87,7 @@ class MenCurriculum(TimestampMixin, Base):
         )
 
 
-class MenObjective(TimestampMixin, Base):
+class MenObjective(TimestampMixin, TranslatableMixin, Base):
     """Atomic MEN objective inside a curriculum reference."""
 
     __tablename__ = "men_objectives"

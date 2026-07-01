@@ -97,13 +97,13 @@ except Exception as exc:
 # 5. Schemas importable
 # ---------------------------------------------------------------------------
 try:
-    from app.schemas.uploads import (  # noqa: F401
+    from app.schemas.content.uploads import (  # noqa: F401
         CompleteUploadRequest,
         InitUploadRequest,
         UploadStatusResponse,
     )
 
-    check("app.schemas.uploads importable", True)
+    check("app.schemas.content.uploads importable", True)
 except Exception as exc:
     check("Schemas import", False, str(exc))
 

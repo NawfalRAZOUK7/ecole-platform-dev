@@ -459,7 +459,7 @@ class Conversation(TimestampMixin, SchoolScopedMixin, Base):
     created_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    subject: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    subject_line: Mapped[str | None] = mapped_column(String(300), nullable=True)
 
     # Relationships
     participants: Mapped[list["ConversationParticipant"]] = relationship(

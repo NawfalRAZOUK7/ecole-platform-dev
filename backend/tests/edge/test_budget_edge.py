@@ -8,13 +8,13 @@ import pytest
 import pytest_asyncio
 from pydantic import ValidationError as PydanticValidationError
 
-from app.schemas.budget import (
+from app.schemas.billing.budget import (
     BudgetAllocationCreateRequest,
     BudgetRequestCreateRequest,
     BudgetTransactionCreateRequest,
-    MicroBudgetCreateRequest,
+    SchoolBudgetCreateRequest,
 )
-from app.services.budget_service import BudgetService
+from app.services.billing.budget_service import BudgetService
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -33,10 +33,10 @@ async def dispose_app_engine_pool():
 
 
 class TestBudgetModelValidation:
-    def test_micro_budget_currency_rejects_non_mad(self) -> None:
-        from app.models.budget import MicroBudget
+    def test_school_budget_currency_rejects_non_mad(self) -> None:
+        from app.models.budget import SchoolBudget
 
-        budget = MicroBudget()
+        budget = SchoolBudget()
 
         with pytest.raises(ValueError, match="currency must be MAD"):
             budget.validate_currency("currency", "EUR")
@@ -69,7 +69,7 @@ class TestBudgetModelValidation:
 class TestBudgetSchemaValidation:
     def test_budget_create_request_rejects_negative_amount(self) -> None:
         with pytest.raises(PydanticValidationError):
-            MicroBudgetCreateRequest(
+            SchoolBudgetCreateRequest(
                 academic_year_id="10000000-0000-4000-8000-000000000001",
                 total_amount=-1,
             )

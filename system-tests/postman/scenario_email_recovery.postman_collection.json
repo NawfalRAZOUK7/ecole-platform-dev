@@ -1,0 +1,371 @@
+{
+  "info": {
+    "name": "Ecole Platform - Email Recovery",
+    "description": "Password recovery flow using test-mode OTP reveal, with TestMail treated as optional external verification.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "recovery_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "recovery_initial_password",
+      "value": "Xk9#mP2vL7@qR4z",
+      "type": "string"
+    },
+    {
+      "key": "recovery_new_password",
+      "value": "NewPass789XyZ!",
+      "type": "string"
+    },
+    {
+      "key": "recovery_invite_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reset_request_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otp",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testmail_api_key",
+      "value": "YOUR_TESTMAIL_API_KEY",
+      "type": "string"
+    },
+    {
+      "key": "testmail_namespace",
+      "value": "ibatt",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get(\"recovery_email\")) {",
+              "  var runId = Date.now() + \"-\" + Math.random().toString(36).slice(2, 8);",
+              "  pm.environment.set(\"recovery_email\", \"recovery.flow+\" + runId + \"@example.com\");",
+              "  pm.environment.set(\"recovery_initial_password\", \"Xk9#mP2vL7@qR4z\");",
+              "  pm.environment.set(\"recovery_new_password\", \"NewPass789XyZ!\");",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has access_token\", function () { pm.expect(responseBody.data).to.have.property(\"access_token\"); });",
+              "pm.environment.set(\"token\", responseBody.data.access_token);",
+              "pm.environment.set(\"access_token\", responseBody.data.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Create Recovery User Invite",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/invites/create",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role_target\": \"TCH\",\n  \"expires_in_hours\": 1\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.environment.set(\"recovery_invite_code\", json.data.code);",
+              "pm.test(\"Invite code returned\", function () { pm.expect(json.data).to.have.property(\"code\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Register Recovery User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"{{recovery_invite_code}}\",\n  \"email\": \"{{recovery_email}}\",\n  \"full_name\": \"Test User\",\n  \"password\": \"{{recovery_initial_password}}\",\n  \"profile_data\": {}\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Recovery user registered\", function () { pm.expect(json.data).to.have.property(\"user_id\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Request Password Reset",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/recovery/request",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{recovery_email}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 202\", function () { pm.expect([200, 202]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has request_id\", function () { pm.expect(responseBody.data).to.have.property(\"request_id\"); });",
+              "pm.environment.set(\"reset_request_id\", responseBody.data.request_id);",
+              "if (responseBody.data.otp) { pm.environment.set(\"otp\", responseBody.data.otp); }",
+              "pm.test(\"OTP available in test mode\", function () { pm.expect(pm.environment.get(\"otp\")).to.exist; });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Optional TestMail Lookup",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{testmail_api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api.testmail.app/api/json?apikey={{testmail_api_key}}&namespace={{testmail_namespace}}",
+          "protocol": "https",
+          "host": [
+            "api",
+            "testmail",
+            "app"
+          ],
+          "path": [
+            "api",
+            "json"
+          ],
+          "query": [
+            {
+              "key": "apikey",
+              "value": "{{testmail_api_key}}"
+            },
+            {
+              "key": "namespace",
+              "value": "{{testmail_namespace}}"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"OTP already set from API response\", function () { pm.expect(pm.environment.get(\"otp\")).to.exist; });",
+              "pm.test(\"TestMail response is acceptable when credentials are absent\", function () { pm.expect([200, 401]).to.include(pm.response.code); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/recovery/verify",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"{{reset_request_id}}\",\n  \"otp\": \"{{otp}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"OTP verification successful\", function () { pm.expect(responseBody.data.message.toLowerCase()).to.match(/verified|success/); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Submit New Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/recovery/reset",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"{{reset_request_id}}\",\n  \"new_password\": \"{{recovery_new_password}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Password reset successful\", function () { pm.expect(responseBody.data.message.toLowerCase()).to.match(/password.*reset|success/); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Login with New Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{recovery_email}}\",\n  \"password\": \"{{recovery_new_password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has access_token\", function () { pm.expect(responseBody.data).to.have.property(\"access_token\"); });",
+              "pm.environment.set(\"token\", responseBody.data.access_token);",
+              "pm.environment.set(\"access_token\", responseBody.data.access_token);"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

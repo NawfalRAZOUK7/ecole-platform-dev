@@ -10,7 +10,7 @@ app/
 ├── seed.py              # Demo data generation (Moroccan test data)
 │
 ├── api/                 # REST API endpoints (Router layer)
-│   └── v1/             # API v1 routes (48 endpoint files)
+│   └── v1/             # API v1 routes grouped by bounded context (auth, user, school, lms, …)
 │
 ├── core/               # Cross-cutting infrastructure
 │   ├── config.py       # Pydantic settings, environment config
@@ -61,43 +61,48 @@ app/
 │   ├── reporting.py   # Report, ReportSchedule
 │   └── feature.py     # FeatureFlag
 │
-├── repositories/      # Data access layer (Repository pattern)
-│   ├── base.py        # BaseRepository with CRUD operations
-│   ├── auth.py        # User, Session queries
-│   ├── school.py      # School, Class, Enrollment queries
-│   ├── lms.py         # Course, Assignment, Quiz queries
-│   ├── billing.py     # Invoice, Payment queries
-│   ├── gradebook.py   # Grade & grading queries
-│   ├── messaging.py   # Message queries
-│   ├── notifications.py # Notification queries
-│   ├── reports.py     # Report queries
-│   ├── analytics.py   # Analytics & KPI queries
-│   └── (24 more)      # Domain-specific repositories
+├── repositories/      # Data access (flat modules; domain-prefixed names where helpful)
+│   ├── base.py
+│   ├── auth.py, school.py, lms.py, billing.py, erp.py, …
+│   ├── lms_quiz.py, lms_question_bank.py, lms_rubric.py
+│   ├── communication_calendar.py, communication_messaging.py, communication_notifications.py
+│   ├── content_documents.py, content_cms.py
+│   ├── academic_*.py  # gradebook, progress, attendance analytics, timetable, skill_passport
+│   ├── reports_*.py, ai_games.py, ai_rewards.py, user_*.py, admin_*.py, …
+│   └── README.md
 │
-├── schemas/           # Pydantic v2 request/response models
-│   ├── auth.py        # LoginRequest, TokenResponse, UserProfile
-│   ├── school.py      # SchoolInput, ClassInput, EnrollmentResponse
-│   ├── lms.py         # CourseInput, AssignmentResponse, etc.
-│   ├── billing.py     # InvoiceResponse, PaymentRequest, etc.
-│   ├── gradebook.py   # GradeInput, GradeResponse, etc.
-│   └── (20 more)      # Domain-specific schemas
+├── schemas/           # Pydantic v2 models (packages mirror API domains)
+│   ├── auth/          # IAM / login / tokens
+│   ├── user/          # profile.py
+│   ├── school/        # school + micro_school
+│   ├── academic/      # erp, programs, gradebook, attendance analytics, timetable, skills
+│   ├── lms/           # courses/assignments + quiz, question_bank, rubric, levels, student_work
+│   ├── billing/       # invoices/fees + enhancements.py, budget.py
+│   ├── content/       # cms, documents, uploads, storage, resources
+│   ├── communication/  # com (init), notifications, calendar
+│   ├── reports/       # reports (init), report_schedule, analytics, financial_health
+│   ├── admin/         # men_compliance, feature
+│   ├── ai/            # ai (init), games, rewards
+│   ├── sync/          # sync_queue
+│   └── README.md
 │
-├── services/          # Business logic layer (Service pattern)
-│   ├── auth.py        # Authentication, JWT refresh, account mgmt
-│   ├── school.py      # School operations, enrollment logic
-│   ├── billing.py     # Invoicing, payment processing, subscriptions
-│   ├── gradebook.py   # Grade calculation, reporting
-│   ├── analytics.py   # KPI computation, dashboards
-│   ├── communication.py # Message coordination
-│   ├── email.py       # Email composition & sending
-│   ├── sms.py         # SMS delivery
-│   ├── calendar.py    # Event scheduling, RSVP logic
-│   ├── reports.py     # Report generation & export
-│   ├── gdpr.py        # Data export, deletion, compliance
-│   ├── ai/            # AI provider strategy pattern
-│   ├── delivery/      # Notification delivery channels
-│   ├── lms/           # Learning management system services
-│   └── (25 more)      # Domain-specific services
+├── services/          # Business logic (domain packages; avoid orphan modules at root)
+│   ├── platform/      # audit, suspicious activity
+│   ├── admin/         # admin dashboard, compliance, feature flags
+│   ├── user/          # GDPR, profile_loader
+│   ├── sync/          # offline sync queue
+│   ├── auth/          # authentication, email, webauthn, oauth, 2FA, profile
+│   ├── school/        # school + micro-school
+│   ├── academic/      # ERP orchestration (erp), attendance, timetable, gradebook, skills, …
+│   ├── lms/           # courses, assignments, quizzes, question bank, programs, …
+│   ├── billing/       # invoices, payments, budgets, retries
+│   ├── content/       # CMS, library, documents, uploads, snapshots, file storage
+│   ├── communication/ # messaging, notifications, calendar, SMS, digests, realtime
+│   ├── reports/       # analytics, dashboards, exports, financial health, transcripts
+│   ├── ai/            # LLM providers, games, rewards
+│   ├── delivery/      # channel strategies (email, push, in-app, SMS)
+│   ├── __init__.py    # selective re-exports for legacy callers/tests
+│   └── README.md
 │
 ├── scripts/           # Application scripts
 │   └── seed_demo.py   # Generate demo data (Moroccan schools)
@@ -124,9 +129,9 @@ app/
 
 | Layer | Pattern | Files |
 |-------|---------|-------|
-| **API** | OpenAPI + FastAPI | `api/v1/*.py` |
-| **Service** | Domain-driven design | `services/*.py` |
-| **Repository** | Data mapper + Unit of Work | `repositories/*.py` |
+| **API** | OpenAPI + FastAPI | `api/v1/<domain>/*.py` |
+| **Service** | Bounded-context packages | `services/<domain>/` |
+| **Repository** | Data mapper + Unit of Work | `repositories/*.py` (domain-prefixed modules) |
 | **Security** | RBAC/ABAC + AuthN | `core/security.py`, `core/permissions.py`, `core/abac.py` |
 | **Async** | SQLAlchemy 2.0 + asyncio | `core/database.py` |
 | **Events** | Domain events + decorators | `domain/events/` |

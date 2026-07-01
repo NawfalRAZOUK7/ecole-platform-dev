@@ -130,7 +130,7 @@ class QuizFactory(AsyncSQLAlchemyFactory):
     title = factory.Sequence(lambda n: f"Quiz {n}")
     description = factory.Sequence(lambda n: f"Quiz de révision {n}")
     subject = "Mathématiques"
-    level_band = "Collège"
+    level_band = "1AC"
     difficulty = "medium"
     time_limit_minutes = 20
     max_attempts = 1

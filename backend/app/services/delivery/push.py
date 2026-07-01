@@ -8,12 +8,12 @@ from uuid import UUID
 
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.base import DomainEvent
-from app.repositories.notifications import (
+from app.repositories.communication_notifications import (
     NotificationDeliveryRepository,
     NotificationRepository,
 )
 from app.services.delivery.base import DeliveryStrategy
-from app.services.push_config import PushConfigService
+from app.services.communication.push_config import PushConfigService
 
 logger = logging.getLogger(__name__)
 

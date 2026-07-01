@@ -19,7 +19,7 @@ export const SUPPORTED_LANGUAGES = ['fr', 'ar', 'en'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
-  fr: 'Francais',
+  fr: 'Français',
   ar: 'العربية',
   en: 'English',
 };
@@ -88,8 +88,15 @@ if (detectedLang !== 'fr' && SUPPORTED_LANGUAGES.includes(detectedLang as Suppor
 /** Apply RTL direction to the document based on language */
 export function applyDirection(lang: string) {
   const dir = RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr';
-  document.documentElement.setAttribute('dir', dir);
-  document.documentElement.setAttribute('lang', lang);
+  const root = document.documentElement;
+  const previousDir = root.getAttribute('dir');
+  root.setAttribute('dir', dir);
+  root.setAttribute('lang', lang);
+  // Cross-fade only on an actual direction change (not initial load).
+  if (previousDir && previousDir !== dir) {
+    root.classList.add('dir-transition');
+    window.setTimeout(() => root.classList.remove('dir-transition'), 300);
+  }
 }
 
 /** Format a date for display using Africa/Casablanca timezone */

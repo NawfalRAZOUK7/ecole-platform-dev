@@ -1,0 +1,589 @@
+{
+  "info": {
+    "name": "École Platform - Chaos Scenarios",
+    "description": "Chaos engineering tests for sync push 503, webhook dedup, rate limit 429, latency 800ms, and load smoke. Run with: newman run scenario_chaos.postman_collection.json -e env_local.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ngrok_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "webhook_secret",
+      "value": "test-secret",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var responseBody = pm.response.json();",
+                  "pm.environment.set(\"token\", responseBody.data.access_token);",
+                  "pm.environment.set(\"user_id\", responseBody.data.user_id || \"\");",
+                  "console.log(\"Logged in as: \" + pm.environment.get(\"email\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Register Sync Device",
+      "item": [
+        {
+          "name": "POST /sync/devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/sync/devices",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_name\": \"Chaos Newman Device\",\n  \"device_type\": \"browser\",\n  \"firmware_version\": \"postman\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test(\"Device registered\", function () { pm.expect(json.data).to.have.property(\"id\"); });",
+                  "pm.environment.set(\"chaos_device_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sync Push 503",
+      "item": [
+        {
+          "name": "POST /sync/push (chaos 503)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"entity_type\": \"student\",\n      \"entity_id\": \"10000000-0000-4000-8000-000000000007\",\n      \"operation\": \"update\",\n      \"payload\": {\"name\": \"Chaos Test Student\"}\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/sync/push?device_id={{chaos_device_id}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 202 or 503\", function () {",
+                  "    pm.expect([202, 503]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 503) {",
+                  "    pm.test(\"Chaos: 503 received (Requestly rule active)\", function () {",
+                  "        pm.response.to.have.status(503);",
+                  "    });",
+                  "} else if (pm.response.code === 202) {",
+                  "    pm.test(\"Info: 202 received (Requestly rule not active)\", function () {",
+                  "        pm.response.to.have.status(202);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Webhook Duplicate",
+      "item": [
+        {
+          "name": "POST /payments/webhook/provider (first)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Webhook-Signature",
+                "value": "{{webhook_secret}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider_event_id\": \"test-dedup-{{$timestamp}}\",\n  \"event_type\": \"payment.succeeded\",\n  \"status\": \"paid\",\n  \"signature\": \"{{webhook_secret}}\"\n}"
+            },
+            "url": "{{baseUrl}}/payments/webhook/provider"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /payments/webhook/provider (duplicate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Webhook-Signature",
+                "value": "{{webhook_secret}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider_event_id\": \"test-dedup-{{$timestamp}}\",\n  \"event_type\": \"payment.succeeded\",\n  \"status\": \"paid\",\n  \"signature\": \"{{webhook_secret}}\"\n}"
+            },
+            "url": "{{baseUrl}}/payments/webhook/provider"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code reflects permission state\", function () {",
+                  "    pm.expect([200, 403]).to.include(pm.response.code);",
+                  "});",
+                  "var responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (e) {}",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Duplicate webhook returns existing event\", function () {",
+                  "        pm.expect(responseBody.data).to.have.property(\"provider_event_id\");",
+                  "        pm.expect(responseBody.data).to.have.property(\"status\", \"processed\");",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Webhook requires payment reconcile permission\", function () {",
+                  "        pm.expect(responseBody.error.code).to.eql(\"ERR-AUTHZ-001\");",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rate Limit 429",
+      "item": [
+        {
+          "name": "GET /auth/me (100 requests)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Fire 20 sequential requests to test rate limiting",
+                  "const statusCodes = [];",
+                  "const maxRequests = 20;",
+                  "let completed = 0;",
+                  "",
+                  "function sendRequest(index) {",
+                  "    if (index >= maxRequests) {",
+                  "        pm.environment.set(\"status_codes\", JSON.stringify(statusCodes));",
+                  "        return;",
+                  "    }",
+                  "    ",
+                  "    pm.sendRequest({",
+                  "        url: pm.environment.get(\"baseUrl\") + \"/auth/me\",",
+                  "        method: \"GET\",",
+                  "        header: {",
+                  "            \"Authorization\": \"Bearer \" + pm.environment.get(\"token\"),",
+                  "            \"Content-Type\": \"application/json\"",
+                  "        }",
+                  "    }, function (err, res) {",
+                  "        if (!err) {",
+                  "            statusCodes.push(res.code);",
+                  "        }",
+                  "        completed++;",
+                  "        sendRequest(completed);",
+                  "    });",
+                  "}",
+                  "",
+                  "sendRequest(0);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const statusCodes = JSON.parse(pm.environment.get(\"status_codes\") || \"[]\");",
+                  "const count429 = statusCodes.filter(code => code === 429).length;",
+                  "const count200 = statusCodes.filter(code => code === 200).length;",
+                  "",
+                  "pm.test(\"Received 20 requests\", function () {",
+                  "    pm.expect(statusCodes.length).to.eql(20);",
+                  "});",
+                  "",
+                  "if (count429 > 0) {",
+                  "    pm.test(\"Rate limiting active: received \" + count429 + \" 429 responses\", function () {",
+                  "        pm.expect(count429).to.be.above(0);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Info: No 429 responses (rate limit may not be active)\", function () {",
+                  "        pm.expect(count200).to.be.above(0);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Latency 800ms",
+      "item": [
+        {
+          "name": "POST /sync/pull (measure latency)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/sync/pull?device_id={{chaos_device_id}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var responseTime = pm.response.responseTime;",
+                  "pm.test(\"Latency measured: \" + responseTime + \"ms\", function () {",
+                  "    pm.expect(responseTime).to.be.above(0);",
+                  "});",
+                  "",
+                  "if (responseTime >= 800) {",
+                  "    pm.test(\"Chaos: Latency >= 800ms (Requestly rule active)\", function () {",
+                  "        pm.expect(responseTime).to.be.at.least(800);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Info: Latency < 800ms (Requestly rule not active or network fast)\", function () {",
+                  "        pm.expect(responseTime).to.be.below(800);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Load Smoke",
+      "item": [
+        {
+          "name": "Load test: 10 RPS for 30s",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Load test: 50 requests sequentially (pm.wait doesn't block in Postman)",
+                  "const statusCodes = [];",
+                  "const maxRequests = 50;",
+                  "let completed = 0;",
+                  "",
+                  "function sendRequest(index) {",
+                  "    if (index >= maxRequests) {",
+                  "        pm.environment.set(\"load_status_codes\", JSON.stringify(statusCodes));",
+                  "        return;",
+                  "    }",
+                  "    ",
+                  "    pm.sendRequest({",
+                  "        url: pm.environment.get(\"baseUrl\") + \"/health\",",
+                  "        method: \"GET\",",
+                  "    }, function (err, res) {",
+                  "        if (!err) {",
+                  "            statusCodes.push(res.code);",
+                  "        }",
+                  "        completed++;",
+                  "        sendRequest(completed);",
+                  "    });",
+                  "}",
+                  "",
+                  "sendRequest(0);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const statusCodes = JSON.parse(pm.environment.get(\"load_status_codes\") || \"[]\");",
+                  "const success = statusCodes.filter(code => code === 200).length;",
+                  "const total = statusCodes.length;",
+                  "const successRate = (success / total) * 100;",
+                  "",
+                  "pm.test(\"Received requests\", function () {",
+                  "    pm.expect(total).to.be.above(0);",
+                  "});",
+                  "",
+                  "if (successRate >= 95) {",
+                  "    pm.test(\"Pass: Success rate >= 95% (\" + successRate.toFixed(2) + \"%)\", function () {",
+                  "        pm.expect(successRate).to.be.at.least(95);",
+                  "    });",
+                  "} else if (successRate >= 80) {",
+                  "    pm.test(\"Warn: Success rate 80-95% (\" + successRate.toFixed(2) + \"%)\", function () {",
+                  "        pm.expect(successRate).to.be.at.least(80);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Fail: Success rate < 80% (\" + successRate.toFixed(2) + \"%)\", function () {",
+                  "        pm.expect(successRate).to.be.at.least(80);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Database Connection Failure",
+      "item": [
+        {
+          "name": "GET /schools/{school_id} (DB unreachable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/schools/{{school_id}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 500, or 503\", function () {",
+                  "    pm.expect([200, 500, 503]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 500 || pm.response.code === 503) {",
+                  "    pm.test(\"Chaos: Error received (DB unreachable)\", function () {",
+                  "        pm.expect([500, 503]).to.include(pm.response.code);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Info: 200 received (DB reachable, Requestly rule not active)\", function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Redis Connection Failure",
+      "item": [
+        {
+          "name": "GET /auth/sessions (Redis unreachable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/sessions"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 500, or 503\", function () {",
+                  "    pm.expect([200, 500, 503]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 500 || pm.response.code === 503) {",
+                  "    pm.test(\"Chaos: Error received (Redis unreachable)\", function () {",
+                  "        pm.expect([500, 503]).to.include(pm.response.code);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Info: 200 received (Redis reachable, Requestly rule not active)\", function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Slow Query",
+      "item": [
+        {
+          "name": "GET /schools/{school_id} (slow query)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/schools/{{school_id}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 504\", function () {",
+                  "    pm.expect([200, 504]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "var responseTime = pm.response.responseTime;",
+                  "pm.test(\"Response time measured: \" + responseTime + \"ms\", function () {",
+                  "    pm.expect(responseTime).to.be.above(0);",
+                  "});",
+                  "",
+                  "if (responseTime > 10000 || pm.response.code === 504) {",
+                  "    pm.test(\"Chaos: Slow query detected (>10s or timeout)\", function () {",
+                  "        pm.expect(responseTime).to.be.above(10000);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Info: Query completed in \" + responseTime + \"ms (slow query rule not active)\", function () {",
+                  "        pm.expect(responseTime).to.be.below(10000);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/features/profile/profile_screen.dart';
+import 'package:ecole_platform/features/user/profile/profile_screen.dart';
 
 import '../helpers/factories.dart';
 import '../helpers/mock_repositories.dart';
@@ -99,7 +99,8 @@ void main() {
 
       expect(
         find.byWidgetPredicate(
-            (w) => w is SingleChildScrollView || w is ListView),
+          (w) => w is SingleChildScrollView || w is ListView,
+        ),
         findsWidgets,
       );
     });

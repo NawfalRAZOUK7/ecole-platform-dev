@@ -98,13 +98,41 @@ ehthumbs.db
 .env.local
 .env.*.local
 secrets/
+tests/postman/env_scenarios.json
 
 # ==================== Local Media Artifacts ====================
 backend/uploads/content/videos/intro_video.mp4
 backend/uploads/content/videos/zay_video.mp4
+
+# ==================== Generated system-test artifacts ====================
+system-tests/reports/
+artifacts/test-runs/
 
 # ==================== Legacy AI Assistant Files ====================
 CLAUDE.md
 CODEX_TRACEABILITY.md
 Conversation_Claude_Cowork.txt
 History_claude.md
+
+# Dockerised test coverage/junit output
+test-artifacts/
+.coverage-*.json
+backend/.coverage-*.json
+playwright-report/
+test-results/
+web/playwright-report/
+web/test-results/
+
+# ==================== Seed / Local Artifacts ====================
+*-report.md
+backend/uploads/reports/
+backend/uploads/submissions/
+design-tokens/
+.junie/
+
+# ==================== Smoke Test Screenshots ====================
+web-smoke-*.png
+web/web-smoke-*.png
+
+# ==================== Scratch Copies ====================
+STRUCTURE copy.md

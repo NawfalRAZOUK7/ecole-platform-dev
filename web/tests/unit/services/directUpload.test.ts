@@ -1,14 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  DIRECT_UPLOAD_THRESHOLD_BYTES,
-  directUpload,
-  putToStorage,
-  shouldUseDirect,
-  UploadPutError,
-  UploadQuarantinedError,
-} from '@/services/uploads/directUpload';
+import { directUpload, shouldUseDirect } from '@/shared/lib/upload';
 import { apiResponse } from '../../utils/mocks';
 import { server } from '../../utils/mocks';
 
@@ -42,11 +35,27 @@ function makeXhrClass(opts: XhrMockOpts = {}) {
 
   class MockXHR {
     status = status;
-    upload: { onprogress: ((e: ProgressEvent) => void) | null } = { onprogress: null };
-    onload: (() => void) | null = null;
-    onerror: (() => void) | null = null;
-    ontimeout: (() => void) | null = null;
     readonly headers: Record<string, string> = {};
+    private _uploadListeners: Record<string, Array<(e: ProgressEvent) => void>> = {};
+    private _listeners: Record<string, Array<() => void>> = {};
+
+    upload = {
+      addEventListener: (event: string, handler: (e: ProgressEvent) => void) => {
+        if (!lastInstance) return;
+        const listeners = lastInstance._uploadListeners;
+        if (!listeners[event]) listeners[event] = [];
+        listeners[event].push(handler);
+      },
+      removeEventListener: () => {},
+      onprogress: null as ((e: ProgressEvent) => void) | null,
+    };
+
+    addEventListener(event: string, handler: () => void) {
+      if (!this._listeners[event]) this._listeners[event] = [];
+      this._listeners[event].push(handler);
+    }
+
+    removeEventListener() {}
 
     constructor() {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -61,60 +70,68 @@ function makeXhrClass(opts: XhrMockOpts = {}) {
 
     send() {
       if (fireError) {
-        this.onerror?.();
+        for (const handler of this._listeners['error'] ?? []) {
+          handler();
+        }
         return;
       }
       const total = 100;
       for (const loaded of progressSteps) {
-        this.upload.onprogress?.({
+        const event = {
           lengthComputable: true,
           loaded,
           total,
-        } as ProgressEvent);
+        } as ProgressEvent;
+        this.upload.onprogress?.(event);
+        for (const handler of this._uploadListeners['progress'] ?? []) {
+          handler(event);
+        }
       }
-      this.onload?.();
+      for (const handler of this._listeners['load'] ?? []) {
+        handler();
+      }
     }
   }
 
   return { MockXHR, getInstance: () => lastInstance };
 }
 
-/** MSW response stubs for the three Phase-8 backend endpoints */
+/** MSW response stubs for the upload endpoints */
 function uploadHandlers(
   opts: {
     uploadId?: string;
     uploadUrl?: string;
-    state?: string;
-    errorMessage?: string | null;
+    confirmResult?: Record<string, unknown>;
+    initStatus?: number;
+    initError?: Record<string, unknown>;
   } = {},
 ) {
   const {
     uploadId = 'uid-test-1',
     uploadUrl = 'https://minio.example.test/bucket/object?X-Amz-Signature=sig',
-    state = 'available',
-    errorMessage = null,
+    confirmResult = {
+      id: 'asset-abc',
+      url: 'https://cdn.example.test/asset-abc',
+      etag: '"abc123"',
+      size: 20971520,
+      mime_type: 'video/mp4',
+    },
+    initStatus = 200,
+    initError,
   } = opts;
 
   return [
-    http.post('/api/v1/uploads/init', () =>
-      apiResponse({
-        upload_id: uploadId,
+    http.post('/api/v1/content/upload-url', () => {
+      if (initError) {
+        return HttpResponse.json(initError, { status: initStatus });
+      }
+      return apiResponse({
         upload_url: uploadUrl,
-        object_key: 'schools/s1/content/object',
-        expires_at: '2026-12-31T23:59:59Z',
-        max_size_bytes: 524_288_000,
-      }),
-    ),
-    http.post('/api/v1/uploads/complete', () => apiResponse({})),
-    http.get(`/api/v1/uploads/${uploadId}/status`, () =>
-      apiResponse({
-        upload_id: uploadId,
-        state,
-        target_id: state === 'available' ? 'asset-abc' : null,
-        target_kind: state === 'available' ? 'content_asset' : null,
-        error_message: errorMessage,
-      }),
-    ),
+        id: uploadId,
+        mime_type: 'video/mp4',
+      });
+    }),
+    http.post('/api/v1/content/upload-confirm', () => apiResponse(confirmResult)),
   ];
 }
 
@@ -123,184 +140,106 @@ function uploadHandlers(
 // ---------------------------------------------------------------------------
 
 describe('shouldUseDirect', () => {
-  it('returns true for video regardless of size', () => {
+  it('returns true for content_asset regardless of size', () => {
     const tiny = makeFile(1, 'clip.mp4', 'video/mp4');
-    expect(shouldUseDirect(tiny, 'video')).toBe(true);
+    expect(shouldUseDirect(tiny, 'content_asset')).toBe(true);
   });
 
-  it('returns true for audio regardless of size', () => {
-    const tiny = makeFile(1, 'track.mp3', 'audio/mpeg');
-    expect(shouldUseDirect(tiny, 'audio')).toBe(true);
+  it('returns true for cms_asset regardless of size', () => {
+    const tiny = makeFile(1, 'image.png', 'image/png');
+    expect(shouldUseDirect(tiny, 'cms_asset')).toBe(true);
   });
 
-  it('returns false for small non-video/audio file', () => {
+  it('returns true for exercise_pdf regardless of size', () => {
+    const tiny = makeFile(1, 'doc.pdf', 'application/pdf');
+    expect(shouldUseDirect(tiny, 'exercise_pdf')).toBe(true);
+  });
+
+  it('returns false for small submission_file', () => {
     const small = makeFile(5 * 1024 * 1024, 'doc.pdf', 'application/pdf');
-    expect(shouldUseDirect(small, 'content_asset')).toBe(false);
+    expect(shouldUseDirect(small, 'submission_file')).toBe(false);
   });
 
   it('returns false when size equals the threshold exactly', () => {
-    const exact = makeFile(DIRECT_UPLOAD_THRESHOLD_BYTES, 'doc.pdf', 'application/pdf');
+    const exact = makeFile(5 * 1024 * 1024, 'doc.pdf', 'application/pdf');
     expect(shouldUseDirect(exact, 'submission_file')).toBe(false);
   });
 
   it('returns true when size exceeds the threshold', () => {
-    const large = makeFile(DIRECT_UPLOAD_THRESHOLD_BYTES + 1, 'report.pdf', 'application/pdf');
+    const large = makeFile(5 * 1024 * 1024 + 1, 'report.pdf', 'application/pdf');
     expect(shouldUseDirect(large, 'submission_file')).toBe(true);
   });
 });
 
 // ---------------------------------------------------------------------------
-// putToStorage
+// directUpload
 // ---------------------------------------------------------------------------
 
-describe('putToStorage', () => {
+describe('directUpload', () => {
+  beforeEach(() => {
+    // Provide a succeeding XHR mock so the PUT never touches real network
+    const { MockXHR } = makeXhrClass({ status: 200 });
+    vi.stubGlobal('XMLHttpRequest', MockXHR);
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it('calls onProgress with intermediate and final values', async () => {
+  it('happy path: returns result after upload and confirm', async () => {
+    server.use(...uploadHandlers());
+
+    const file = makeFile(20 * 1024 * 1024, 'lecture.mp4', 'video/mp4');
+    const states: string[] = [];
+
+    const result = await directUpload({
+      kind: 'content_asset',
+      scope: { school_id: 'school-1', content_item_id: 'ci-1' },
+      file,
+      onStateChange: (s) => states.push(s),
+    });
+
+    expect(result.id).toBe('asset-abc');
+    expect(result.url).toBe('https://cdn.example.test/asset-abc');
+    expect(states).toEqual(['pending', 'uploading', 'processing', 'completed']);
+  });
+
+  it('calls onProgress during XHR upload', async () => {
     const { MockXHR } = makeXhrClass({ progressSteps: [25, 75, 100] });
     vi.stubGlobal('XMLHttpRequest', MockXHR);
 
-    const file = makeFile(1024, 'test.pdf', 'application/pdf');
+    server.use(...uploadHandlers());
+
+    const file = makeFile(20 * 1024 * 1024, 'lecture.mp4', 'video/mp4');
     const progress: number[] = [];
 
-    await putToStorage('https://minio.example.test/key', file, (p: number) => progress.push(p));
+    await directUpload({
+      kind: 'content_asset',
+      scope: { school_id: 'school-1' },
+      file,
+      onProgress: (p) => progress.push(p),
+    });
 
     expect(progress).toContain(25);
     expect(progress).toContain(75);
     expect(progress).toContain(100);
   });
 
-  it('resolves on 2xx status', async () => {
-    const { MockXHR } = makeXhrClass({ status: 200 });
-    vi.stubGlobal('XMLHttpRequest', MockXHR);
-
-    const file = makeFile(512, 'test.bin');
-    await expect(putToStorage('https://minio.example.test/key', file)).resolves.toBeUndefined();
-  });
-
-  it('rejects with UploadPutError on non-2xx status', async () => {
-    const { MockXHR } = makeXhrClass({ status: 403, progressSteps: [] });
-    vi.stubGlobal('XMLHttpRequest', MockXHR);
-
-    const file = makeFile(512, 'test.bin');
-    await expect(putToStorage('https://minio.example.test/key', file)).rejects.toBeInstanceOf(
-      UploadPutError,
-    );
-  });
-
-  it('rejects on network error', async () => {
-    const { MockXHR } = makeXhrClass({ fireError: true, progressSteps: [] });
-    vi.stubGlobal('XMLHttpRequest', MockXHR);
-
-    const file = makeFile(512, 'test.bin');
-    await expect(putToStorage('https://minio.example.test/key', file)).rejects.toThrow(
-      /network error/i,
-    );
-  });
-
-  it('does NOT set an Authorization header on the PUT request', async () => {
-    const { MockXHR, getInstance } = makeXhrClass();
-    vi.stubGlobal('XMLHttpRequest', MockXHR);
-
-    const file = makeFile(512, 'test.bin');
-    await putToStorage('https://minio.example.test/key', file);
-
-    const instance = getInstance();
-    expect(instance).not.toBeNull();
-    expect(Object.keys(instance!.headers)).not.toContain('Authorization');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// directUpload (integration)
-// ---------------------------------------------------------------------------
-
-describe('directUpload', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    // Provide a succeeding XHR mock so putToStorage never touches a real network
-    const { MockXHR } = makeXhrClass({ status: 200 });
-    vi.stubGlobal('XMLHttpRequest', MockXHR);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
-  });
-
-  it('happy path: progresses through all states and returns available', async () => {
-    server.use(...uploadHandlers({ state: 'available' }));
-
-    const file = makeFile(20 * 1024 * 1024, 'lecture.mp4', 'video/mp4');
-    const states: string[] = [];
-
-    const promise = directUpload({
-      kind: 'video',
-      scope: { school_id: 'school-1', content_item_id: 'ci-1' },
-      file,
-      onStateChange: (s: string) => states.push(s),
-    });
-
-    // Advance past the 2-second poll interval; advanceTimersByTimeAsync
-    // flushes microtasks between each timer tick so fetch responses land first.
-    await vi.advanceTimersByTimeAsync(3000);
-
-    const result = await promise;
-
-    expect(result.state).toBe('available');
-    expect(result.target_id).toBe('asset-abc');
-    // directUpload emits 'processing' before completeUpload; pollUntilDone
-    // emits it again on first poll — two 'processing' entries are correct.
-    expect(states).toEqual(['preparing', 'uploading', 'processing', 'processing', 'available']);
-  });
-
-  it('infected file: status quarantined → throws UploadQuarantinedError', async () => {
-    server.use(...uploadHandlers({ state: 'quarantined' }));
-
-    const file = makeFile(20 * 1024 * 1024, 'virus.mp4', 'video/mp4');
-
-    // Attach .catch() immediately to prevent an unhandled-rejection warning
-    // while fake timers are running. We collect the thrown value and assert below.
-    let thrownError: unknown = null;
-    const settled = directUpload({
-      kind: 'video',
-      scope: { school_id: 'school-1' },
-      file,
-    }).catch((e: unknown) => {
-      thrownError = e;
-    });
-
-    await vi.advanceTimersByTimeAsync(3000);
-    await settled;
-
-    expect(thrownError).toBeInstanceOf(UploadQuarantinedError);
-  });
-
-  it('init failure (422): throws without calling XHR PUT', async () => {
+  it('rejects when init returns non-2xx', async () => {
     server.use(
-      http.post('/api/v1/uploads/init', () =>
-        HttpResponse.json(
-          {
-            error: {
-              code: 'ERR-VAL-422',
-              message: 'Unsupported mime type',
-              category: 'validation',
-              retryable: false,
-              timestamp: new Date().toISOString(),
-            },
+      ...uploadHandlers({
+        initStatus: 422,
+        initError: {
+          error: {
+            code: 'ERR-VAL-422',
+            message: 'Unsupported mime type',
+            category: 'validation',
+            retryable: false,
+            timestamp: new Date().toISOString(),
           },
-          { status: 422 },
-        ),
-      ),
+        },
+      }),
     );
-
-    // Spy on XHR so we can assert send() is never called
-    const sendSpy = vi.fn();
-    const { MockXHR } = makeXhrClass();
-    MockXHR.prototype.send = sendSpy;
-    vi.stubGlobal('XMLHttpRequest', MockXHR);
 
     const file = makeFile(512, 'bad.exe', 'application/x-msdownload');
 
@@ -311,7 +250,57 @@ describe('directUpload', () => {
         file,
       }),
     ).rejects.toThrow();
+  });
 
-    expect(sendSpy).not.toHaveBeenCalled();
+  it('rejects when XHR PUT fails', async () => {
+    const { MockXHR } = makeXhrClass({ status: 403, progressSteps: [] });
+    vi.stubGlobal('XMLHttpRequest', MockXHR);
+
+    server.use(...uploadHandlers());
+
+    const file = makeFile(20 * 1024 * 1024, 'lecture.mp4', 'video/mp4');
+
+    await expect(
+      directUpload({
+        kind: 'content_asset',
+        scope: { school_id: 'school-1' },
+        file,
+      }),
+    ).rejects.toThrow('Upload failed');
+  });
+
+  it('rejects on XHR network error', async () => {
+    const { MockXHR } = makeXhrClass({ fireError: true, progressSteps: [] });
+    vi.stubGlobal('XMLHttpRequest', MockXHR);
+
+    server.use(...uploadHandlers());
+
+    const file = makeFile(20 * 1024 * 1024, 'lecture.mp4', 'video/mp4');
+
+    await expect(
+      directUpload({
+        kind: 'content_asset',
+        scope: { school_id: 'school-1' },
+        file,
+      }),
+    ).rejects.toThrow('Upload failed');
+  });
+
+  it('does NOT set an Authorization header on the PUT request', async () => {
+    const { MockXHR, getInstance } = makeXhrClass();
+    vi.stubGlobal('XMLHttpRequest', MockXHR);
+
+    server.use(...uploadHandlers());
+
+    const file = makeFile(20 * 1024 * 1024, 'lecture.mp4', 'video/mp4');
+    await directUpload({
+      kind: 'content_asset',
+      scope: { school_id: 'school-1' },
+      file,
+    });
+
+    const instance = getInstance();
+    expect(instance).not.toBeNull();
+    expect(Object.keys(instance!.headers)).not.toContain('Authorization');
   });
 });

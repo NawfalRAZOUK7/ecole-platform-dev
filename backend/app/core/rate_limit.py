@@ -33,11 +33,15 @@ AUTH_PATHS = {
     "/api/v1/auth/login",
     "/api/v1/auth/register",
     "/api/v1/auth/refresh",
+    "/api/v1/auth/activate",
     "/api/v1/auth/2fa/verify",
     "/api/v1/auth/verify-email",
     "/api/v1/recovery/request",
     "/api/v1/recovery/verify",
     "/api/v1/recovery/reset",
+    # Public onboarding applications (anonymous) — strict, anti-abuse.
+    "/api/v1/applications/formal-school",
+    "/api/v1/applications/micro-school",
 }
 
 # Limit configs: (max_requests, window_seconds)

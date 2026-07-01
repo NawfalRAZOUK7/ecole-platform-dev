@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/question_bank.dart';
-import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
-import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
-import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
+import 'package:ecole_platform/domain/entities/lms/question_bank.dart';
+import 'package:ecole_platform/features/lms/question_bank/generate_quiz_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_import_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_screen.dart';
 
 import '../helpers/mock_repositories.dart';
 import '../helpers/pump_app.dart';
@@ -50,7 +50,7 @@ void main() {
     final repository = MockQuestionBankRepository();
     when(
       () => repository.generateQuiz(
-        subject: 'Mathematics',
+        subject: 'math',
         difficulty: 'medium',
         count: 5,
         tags: const [],
@@ -71,7 +71,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).at(0), 'Mathematics');
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mathématiques').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
     await tester.pumpAndSettle();
 

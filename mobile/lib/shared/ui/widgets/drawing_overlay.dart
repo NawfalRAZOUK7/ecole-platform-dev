@@ -61,7 +61,11 @@ class DrawingPath {
         (previous.dy + current.dy) / 2,
       );
       path.quadraticBezierTo(
-          previous.dx, previous.dy, midpoint.dx, midpoint.dy);
+        previous.dx,
+        previous.dy,
+        midpoint.dx,
+        midpoint.dy,
+      );
     }
 
     path.lineTo(points.last.dx, points.last.dy);

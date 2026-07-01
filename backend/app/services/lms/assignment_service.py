@@ -21,7 +21,7 @@ from app.schemas.lms import (
     AssignmentCreateRequest,
     SubmissionCreateRequest,
 )
-from app.services.audit import AuditService
+from app.services.platform.audit import AuditService
 from app.services.lms._helpers import (
     LMSServiceBase,
     MAX_FILES_PER_SUBMISSION,

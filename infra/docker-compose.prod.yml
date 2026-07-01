@@ -75,15 +75,15 @@ services:
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_BUCKET: ${S3_BUCKET:-ecole-prod-private}
       S3_REGION: ${S3_REGION:-us-east-1}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY must be set}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY must be set}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       DOCUMENT_STORAGE_BACKEND: ${DOCUMENT_STORAGE_BACKEND:-local}
       DOCUMENT_STORAGE_ENDPOINT: ${S3_ENDPOINT}
       DOCUMENT_STORAGE_BUCKET: ${S3_BUCKET:-ecole-prod-private}
       DOCUMENT_STORAGE_REGION: ${S3_REGION:-us-east-1}
-      DOCUMENT_STORAGE_ACCESS_KEY: ${S3_ACCESS_KEY:-}
-      DOCUMENT_STORAGE_SECRET_KEY: ${S3_SECRET_KEY:-}
+      DOCUMENT_STORAGE_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY must be set}
+      DOCUMENT_STORAGE_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY must be set}
       DOCUMENT_STORAGE_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       # TOTP
       TOTP_ISSUER: ${TOTP_ISSUER:-EcolePlatform}
@@ -382,8 +382,10 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
-      - web
+      backend:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - ecole-prod-network
     restart: unless-stopped
@@ -429,15 +431,15 @@ services:
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_BUCKET: ${S3_BUCKET:-ecole-prod-private}
       S3_REGION: ${S3_REGION:-us-east-1}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY must be set}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY must be set}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       DOCUMENT_STORAGE_BACKEND: ${DOCUMENT_STORAGE_BACKEND:-local}
       DOCUMENT_STORAGE_ENDPOINT: ${S3_ENDPOINT}
       DOCUMENT_STORAGE_BUCKET: ${S3_BUCKET:-ecole-prod-private}
       DOCUMENT_STORAGE_REGION: ${S3_REGION:-us-east-1}
-      DOCUMENT_STORAGE_ACCESS_KEY: ${S3_ACCESS_KEY:-}
-      DOCUMENT_STORAGE_SECRET_KEY: ${S3_SECRET_KEY:-}
+      DOCUMENT_STORAGE_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY must be set}
+      DOCUMENT_STORAGE_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY must be set}
       DOCUMENT_STORAGE_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       TZ: ${TZ:-Africa/Casablanca}
     secrets:
@@ -446,7 +448,7 @@ services:
       - jwt_secret_key
       - smtp_password
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -512,6 +514,9 @@ services:
       resources:
         limits:
           memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
 
   # ==================== Grafana ====================
   grafana:
@@ -537,6 +542,9 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "0.25"
+        reservations:
+          memory: 64M
 
 # ==================== Docker Secrets ====================
 # In Docker Swarm: use `docker secret create`

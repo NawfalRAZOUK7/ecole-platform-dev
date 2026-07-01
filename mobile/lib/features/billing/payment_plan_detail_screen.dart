@@ -60,40 +60,57 @@ class PaymentPlanDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Installments',
+              t.t('billing.installments'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
             ),
             const SizedBox(height: 12),
-            ...plan.installments.map(
-              (item) => Card(
-                margin: const EdgeInsets.only(bottom: 12),
+            if (plan.installments.isEmpty)
+              Card(
                 child: ListTile(
-                  leading: const Icon(Icons.schedule_outlined),
-                  title: Text(_formatDate(item.dueDate)),
-                  subtitle: item.paidAt == null
-                      ? null
-                      : Text('Paid at ${_formatDate(item.paidAt!)}'),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      AppCurrencyText(amount: item.amount),
-                      const SizedBox(height: 4),
-                      AppBadge(
-                        label: item.status,
-                        variant: switch (item.status) {
-                          'paid' => AppBadgeVariant.success,
-                          'overdue' => AppBadgeVariant.error,
-                          _ => AppBadgeVariant.warning,
-                        },
-                      ),
-                    ],
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(
+                    t
+                        .t('billing.installmentCount')
+                        .replaceAll('{count}', '${plan.installmentCount}'),
+                  ),
+                  subtitle: Text(t.t('billing.installmentDetailUnavailable')),
+                ),
+              )
+            else
+              ...plan.installments.map(
+                (item) => Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const Icon(Icons.schedule_outlined),
+                    title: Text(_formatDate(item.dueDate)),
+                    subtitle: item.paidAt == null
+                        ? null
+                        : Text(
+                            t
+                                .t('billing.paidOn')
+                                .replaceAll('{date}', _formatDate(item.paidAt!)),
+                          ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        AppCurrencyText(amount: item.amount),
+                        const SizedBox(height: 4),
+                        AppBadge(
+                          label: item.status,
+                          variant: switch (item.status) {
+                            'paid' => AppBadgeVariant.success,
+                            'overdue' => AppBadgeVariant.error,
+                            _ => AppBadgeVariant.warning,
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

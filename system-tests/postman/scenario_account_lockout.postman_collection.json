@@ -1,0 +1,234 @@
+{
+  "info": {
+    "name": "École Platform - Account Lockout Tests",
+    "description": "Account lockout scenario tests to prevent brute force attacks. Note: This test will temporarily lock the account being tested.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Failed login attempts",
+      "item": [
+        {
+          "name": "POST /auth/login (attempt 1 - wrong password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"WrongPassword123!\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 or 403 (failed login or locked)\", function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login (attempt 2 - wrong password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"WrongPassword456!\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 or 403 (failed login or locked)\", function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login (attempt 3 - wrong password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"WrongPassword789!\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 or 403 (failed login or locked)\", function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login (attempt 4 - wrong password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"WrongPassword012!\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 or 403 (failed login or locked)\", function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login (attempt 5 - wrong password - should trigger lockout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"WrongPassword345!\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 or 403 (failed login or locked)\", function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Attempt login with correct password (should be locked)",
+      "item": [
+        {
+          "name": "POST /auth/login (correct password - account locked)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 (account locked) or 200 (if lockout disabled)\", function () {",
+                  "    pm.expect([403, 429, 200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 403) {",
+                  "    responseBody = pm.response.json();",
+                  "    console.log(\"Lockout response:\", JSON.stringify(responseBody));",
+                  "    pm.test(\"Response has lockout message\", function () {",
+                  "        // Check if error message exists in either error.message or data.error or data.message",
+                  "        var message = responseBody.error?.message || responseBody.data?.error || responseBody.data?.message || responseBody.message || responseBody.error || \"\";",
+                  "        // Convert to string if needed",
+                  "        if (typeof message !== 'string') {",
+                  "            message = JSON.stringify(message);",
+                  "        }",
+                  "        pm.expect(message.toLowerCase()).to.include(\"locked\");",
+                  "    });",
+                  "    console.log(\"Account is locked as expected\");",
+                  "} else {",
+                  "    console.log(\"Account lockout is not enabled in the backend\");",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

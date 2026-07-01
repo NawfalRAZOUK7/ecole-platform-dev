@@ -37,12 +37,14 @@ from app.models.lms import (
     Assessment,
     AssessmentResult,
     Assignment,
+    ClassContentAssignment,
     ContentItem,
     Course,
     Grade,
     Submission,
 )
 from app.models.school import School
+from app.models.taxonomy import DifficultyLevel
 from tests.factories.erp import (
     AcademicYearFactory,
     AttendanceRecordFactory,
@@ -74,8 +76,10 @@ ACTIVITY_ID = uuid.UUID("30000000-0000-4000-8000-000000000006")
 GRADE_ID = uuid.UUID("30000000-0000-4000-8000-000000000007")
 ASSESSMENT_RESULT_ID = uuid.UUID("30000000-0000-4000-8000-000000000008")
 PARENT_FEED_ITEM_ID = uuid.UUID("30000000-0000-4000-8000-000000000009")
+CLASS_CONTENT_ASSIGNMENT_ID = uuid.UUID("30000000-0000-4000-8000-00000000000a")
 
 ADMIN_ID = uuid.UUID("10000000-0000-4000-8000-000000000001")
+DIRECTOR_ID = uuid.UUID("10000000-0000-4000-8000-000000000002")
 TEACHER_ID = uuid.UUID("10000000-0000-4000-8000-000000000003")
 PARENT_ID = uuid.UUID("10000000-0000-4000-8000-000000000005")
 STUDENT_ID = uuid.UUID("10000000-0000-4000-8000-000000000007")
@@ -83,6 +87,8 @@ SUPERADMIN_ID = uuid.UUID("10000000-0000-4000-8000-00000000000a")
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 PARENT_EMAIL = "parent.alaoui@gmail.com"
@@ -132,14 +138,19 @@ async def session_factory(engine):
 
 
 @pytest_asyncio.fixture(loop_scope="function")
-async def isolated_legacy_api_db(session_factory):
+async def isolated_legacy_api_db(session_factory, engine):
+    # SETUP: truncate with short lock_timeout to fail fast on stale locks
     async with session_factory() as session:
+        await session.execute(text("SET LOCAL lock_timeout = '5s'"))
         await session.execute(TRUNCATE_ALL_TABLES_SQL)
         await session.commit()
     try:
         yield
     finally:
+        # TEARDOWN: dispose pool first to release app connections, then truncate
+        await engine.dispose()
         async with session_factory() as session:
+            await session.execute(text("SET LOCAL lock_timeout = '10s'"))
             await session.execute(TRUNCATE_ALL_TABLES_SQL)
             await session.commit()
 
@@ -197,6 +208,16 @@ async def legacy_api_seed(isolated_legacy_api_db, session_factory):
                 password=ADMIN_PASSWORD,
                 full_name="Admin Benani",
                 role_code=RoleCode.ADM.value,
+            )
+        if await session.get(User, DIRECTOR_ID) is None:
+            await _create_actor(
+                session,
+                school=school,
+                user_id=DIRECTOR_ID,
+                email=DIRECTOR_EMAIL,
+                password=DIRECTOR_PASSWORD,
+                full_name="Directrice Benani",
+                role_code=RoleCode.DIR.value,
             )
         teacher = await session.get(User, TEACHER_ID)
         if teacher is None:
@@ -381,13 +402,23 @@ async def legacy_api_seed(isolated_legacy_api_db, session_factory):
                     school_id=school.id,
                     title="Lecture guidee",
                     content_type="document",
-                    level_band="6eme",
+                    level_band="1AC",
                     language="fr",
                     status="published",
-                    subject="Francais",
+                    subject="french",
                     created_by=teacher.id,
                     description="Support de lecture pour les eleves",
                     origin="PLATFORM",
+                )
+            )
+        if await session.get(ClassContentAssignment, CLASS_CONTENT_ASSIGNMENT_ID) is None:
+            session.add(
+                ClassContentAssignment(
+                    id=CLASS_CONTENT_ASSIGNMENT_ID,
+                    school_id=school.id,
+                    teacher_id=teacher.id,
+                    class_id=school_class.id,
+                    content_item_id=CONTENT_ITEM_ID,
                 )
             )
         if await session.get(Activity, ACTIVITY_ID) is None:
@@ -396,7 +427,7 @@ async def legacy_api_seed(isolated_legacy_api_db, session_factory):
                     id=ACTIVITY_ID,
                     school_id=school.id,
                     type="quiz",
-                    difficulty="easy",
+                    difficulty=DifficultyLevel.EASY.value,
                     title="Activite fractions",
                     pedagogical_objective="Reviser les fractions",
                 )

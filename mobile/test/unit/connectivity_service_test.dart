@@ -2,10 +2,10 @@ import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/data/local_store/cache_store.dart';
-import 'package:ecole_platform/data/local_store/offline_queue.dart';
-import 'package:ecole_platform/domain/entities/sync.dart';
-import 'package:ecole_platform/shared/connectivity_service.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
+import 'package:ecole_platform/core/storage/offline_queue.dart';
+import 'package:ecole_platform/domain/entities/sync/sync.dart';
+import 'package:ecole_platform/core/network/connectivity.dart';
 
 import '../helpers/api_responses.dart';
 import '../helpers/test_database.dart';
@@ -74,14 +74,14 @@ void main() {
     await cache.put(
       'feed:first',
       const [
-        {'id': 'feed-1'}
+        {'id': 'feed-1'},
       ],
       CacheTtl.feed,
     );
     await cache.put(
       'notifications:first',
       const [
-        {'id': 'notification-1'}
+        {'id': 'notification-1'},
       ],
       CacheTtl.notifications,
     );

@@ -15,6 +15,7 @@ test.describe('J5 — Two-factor authentication flow', () => {
     await page.goto('/login');
 
     // Fill login form
+    await expect(page.locator('#email')).toBeEnabled({ timeout: 10_000 });
     await page.locator('#email').fill(credentials.admin.email);
     await page.locator('#password').fill(credentials.admin.password);
     const schoolInput = page.locator('#schoolId');
@@ -93,6 +94,7 @@ test.describe('J5 — Two-factor authentication flow', () => {
 
   test('2FA form shows backup code toggle', async ({ page }) => {
     await page.goto('/login');
+    await expect(page.locator('#email')).toBeEnabled({ timeout: 10_000 });
     await page.locator('#email').fill(credentials.admin.email);
     await page.locator('#password').fill(credentials.admin.password);
 

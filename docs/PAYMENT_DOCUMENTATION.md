@@ -1043,7 +1043,7 @@ ElevatedButton.icon(
 
 ### Integration Tests
 
-**File**: `backend/tests/integration/api/test_invoice_pdf_api.py`
+**File**: `backend/tests/integration/api/billing/test_invoice_pdf_api.py`
 
 - Test `/invoices/{invoice_id}/pdf` endpoint
 - Test `/payments/{payment_id}/receipt` endpoint

@@ -15,25 +15,25 @@ from sqlalchemy import (
     String,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import (
+    Base,
+    TimestampMixin,
+    TranslatableMixin,
+)
+from app.models.taxonomy import DifficultyLevel, enum_values as _enum_values
 
 
 class GameType(str, enum.Enum):
     MEMORY_MATCH = "memory_match"
     SORTING = "sorting"
     VOCABULARY_CARDS = "vocabulary_cards"
+    LETTER_PUZZLE = "letter_puzzle"
 
 
-class GameDifficulty(str, enum.Enum):
-    EASY = "easy"
-    MEDIUM = "medium"
-    HARD = "hard"
-
-
-class GameConfig(TimestampMixin, Base):
+class GameConfig(TimestampMixin, TranslatableMixin, Base):
     """Stored configuration for a mobile game session."""
 
     __tablename__ = "game_configs"
@@ -43,7 +43,18 @@ class GameConfig(TimestampMixin, Base):
     title_ar: Mapped[str | None] = mapped_column(String(300), nullable=True)
     title_fr: Mapped[str | None] = mapped_column(String(300), nullable=True)
     subject: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    difficulty: Mapped[str] = mapped_column(String(20), nullable=False, default="easy")
+    # Canonical difficulty is UPPERCASE (DifficultyLevel); native PG enum
+    # (difficulty_enum) since migration 20260622_promote_native_enums.
+    difficulty: Mapped[str] = mapped_column(
+        PgEnum(
+            DifficultyLevel,
+            name="difficulty_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=DifficultyLevel.EASY.value,
+    )
     target_age_min: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
     target_age_max: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
     config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
@@ -73,8 +84,9 @@ class GameConfig(TimestampMixin, Base):
 
     @validates("difficulty")
     def validate_difficulty(self, key: str, value: str) -> str:
-        cleaned = value.strip().lower()
-        if cleaned not in {item.value for item in GameDifficulty}:
+        # Accept any case from clients, normalize to the canonical UPPERCASE form.
+        cleaned = value.strip().upper()
+        if cleaned not in {item.value for item in DifficultyLevel}:
             raise ValueError("Unsupported game difficulty")
         return cleaned
 

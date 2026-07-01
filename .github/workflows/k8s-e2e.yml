@@ -8,18 +8,52 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   k8s-e2e:
     name: Kubernetes E2E Tests (Kind)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
       redis:
         image: redis:7-alpine
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
     steps:
       - uses: actions/checkout@v4
 
@@ -111,6 +145,8 @@ jobs:
 
       - name: Deploy with Helm
         run: |
+          kubectl get nodes -o wide
+          kubectl get pods -n ecole-test -o wide
           helm upgrade --install ecole-platform ./infra/k8s \
             -n ecole-test \
             -f ./infra/k8s/values-staging.yaml \
@@ -118,14 +154,17 @@ jobs:
             --set namespace.name=ecole-test \
             --set images.backend.repository=ecole-backend \
             --set images.backend.tag=test \
+            --set images.backend.pullPolicy=Never \
             --set images.web.repository=ecole-web \
             --set images.web.tag=test \
+            --set images.web.pullPolicy=Never \
             --set backend.secrets.databaseUrl=ecole-database-url \
             --set backend.secrets.redisUrl=ecole-redis-url \
             --set backend.secrets.jwtSecretKey=ecole-jwt-secret \
             --set backend.secrets.smtpPassword=ecole-smtp-password \
             --wait \
-            --timeout 5m
+            --timeout 10m \
+            --debug
 
       - name: Verify deployment
         run: |

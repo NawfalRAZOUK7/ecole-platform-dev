@@ -8,73 +8,145 @@
 
 import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/services/auth/AuthContext';
+import { useAuth } from '@/app/providers/AuthContext';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
-import { Layout } from '@/shared/ui/Layout';
+import { Layout } from '@/widgets/layout/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
-import { ROLE_REDIRECT } from '@/features/auth/roleRedirects';
-import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
-import { FeatureTogglesPage } from '@/features/admin/FeatureTogglesPage';
-import { CmsLayout } from '@/features/cms/CmsLayout';
-import { QuizAnalyticsPage } from '@/features/quizzes/QuizAnalyticsPage';
-import { QuizResultsPage } from '@/features/quizzes/QuizResultsPage';
-import { GDPRPage } from '@/features/settings/GDPRPage';
+import { BrandSplash } from '@/shared/ui/BrandSplash';
+import { ChartGradients } from '@/shared/ui/ChartGradients';
+import { ROLE_REDIRECT } from '@/app/roleRedirects';
+import { ProtectedRoute } from '@/app/ProtectedRoute';
+import { PERMISSIONS } from '@/shared/permissions';
+import { ActivatePage, ApplyPage, PlatformApplicationsPage } from '@/features/onboarding';
+import { FeatureTogglesPage } from '@/pages/admin/FeatureTogglesPage';
+import { CmsLayout } from '@/features/content/cms/ui/CmsLayout';
+import { QuizAnalyticsPage } from '@/features/lms/quizzes/ui/QuizAnalyticsPage';
+import { QuizResultsPage } from '@/features/lms/quizzes/ui/QuizResultsPage';
+import { GDPRPage } from '@/pages/user/GDPRPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
+// Feature-level lazy exports (replaces centralized LazyPages.ts)
 import {
   LoginPage,
   RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+} from '@/features/auth/lazy';
+import {
   DashboardPage,
   UsersPage,
   InvitationsPage,
   AuditLogPage,
-  SchoolSettingsPage,
   JustificationReviewPage,
   BatchRegisterPage,
-  ParentChildLinksPage,
-  BadgesPage,
+  ComplianceDashboardPage,
+  CurriculumMappingPage,
+  ComplianceReportPage,
+} from '@/features/admin/lazy';
+import {
   ProgramsPage,
   EnrollmentsPage,
   ProgramEquivalencesPage,
   ProgramVersionsPage,
   EligibilityRulesPage,
   StudentAcademicHistoryPage,
-  AnalyticsDashboardPage,
-  TeacherClassesPage,
-  TeacherCoursesPage,
-  AssignmentFormPage,
-  TeacherSubmissionsPage,
-  TeacherAttendancePage,
-  AssessmentFormPage,
-  ContentLibraryPage,
-  QuizManagerPage,
-  ClassProgressPage,
-  StudentHomePage,
-  StudentContentPage,
-  StoryViewerPage,
-  ColoringViewerPage,
-  QuizPlayerPage,
   AttendanceModulePage,
   AttendanceHistoryPage,
   AttendanceAnalyticsPage,
   ParentJustificationPage,
   GradebookPage,
   GradeDetailPage,
+  TimetablePage,
+  TimetableConstraintsPage,
+  TimetableGeneratePage,
+  ProgressDashboardPage,
+  ParentProgressPage,
+  ResultsPage,
+  SkillsOverviewPage,
+  SkillPassportPage,
+  SkillEvaluationPage,
+  SkillAnalyticsPage,
+  TeacherClassesPage,
+  TeacherAttendancePage,
+  ClassProgressPage,
+} from '@/features/academic/lazy';
+import {
   BudgetListPage,
   BudgetRequestPage,
   BudgetAnalyticsPage,
   BudgetDetailPage,
+  InvoicesPage,
+  InvoiceDetailPage,
+  FeeStructuresPage,
+  FeeAssignmentsPage,
+  GenerateInvoicesPage,
+  SiblingPolicyPage,
+  LateFeePolicyPage,
+  PaymentPlansPage,
+  PaymentPlanDetailPage,
+} from '@/features/billing/lazy';
+import {
+  NotificationsPage,
+  NotificationSettingsPage,
+  CalendarPage,
+  EventDetailPage,
+  HolidayManagerPage,
+  ConversationsPage,
+  ChatPage,
+  AnnouncementsPage,
+} from '@/features/communication/lazy';
+import {
+  FeedPage,
+  ContentPage,
+  ContentDetailPage,
+  ContentPlayerPage,
+  StudentContentPage,
+  StoryViewerPage,
+  ColoringViewerPage,
+  DocumentsPage,
+  ResourcesPage,
+  DocumentVersionsPage,
+  DocumentPreviewPage,
+  StudentDocumentsPage,
+  ContentLibraryPage,
+  CmsContentListPage,
+  CmsContentUploadPage,
+  CmsContentEditPage,
+  CmsReviewQueuePage,
+  CmsQuizBuilderPage,
+  CmsAnalyticsPage,
+} from '@/features/content/lazy';
+import {
+  TeacherCoursesPage,
+  AssignmentFormPage,
+  TeacherSubmissionsPage,
+  AssessmentFormPage,
+  QuizManagerPage,
+  QuizPlayerPage,
+  WritingWorkspacePage,
+  StudentSubmissionPage,
+  RubricsListPage,
+  RubricEditorPage,
+  RubricGradingPage,
+  QuestionBankPage,
+  QuestionBankImportPage,
+  GenerateQuizPage,
+} from '@/features/lms/lazy';
+import {
+  ReportsPage,
+  AnalyticsDashboardPage,
+  FinancialDashboardPage,
+  FinancialSnapshotsPage,
+  FinancialExportPage,
+} from '@/features/reports/lazy';
+import {
+  SchoolSettingsPage,
   MicroSchoolListPage,
   MicroSchoolDetailPage,
   MicroSchoolEnrollPage,
-  TimetablePage,
-  ConversationsPage,
-  ChatPage,
-  ProgressDashboardPage,
-  ParentProgressPage,
-  MyChildrenPage,
-  AnnouncementsPage,
-  FeedPage,
+} from '@/features/school/lazy';
+import {
+  BadgesPage,
   RewardsPage,
   StudentRewardsPage,
   LeaderboardPage,
@@ -83,70 +155,21 @@ import {
   GameConfigEditor,
   StudentGamesPage,
   GamePlayerPage,
-  NotificationsPage,
-  NotificationSettingsPage,
-  CalendarPage,
-  EventDetailPage,
-  HolidayManagerPage,
-  ReportsPage,
-  DocumentsPage,
-  ResourcesPage,
-  DocumentVersionsPage,
-  DocumentPreviewPage,
-  StudentDocumentsPage,
-  ContentPage,
-  ContentDetailPage,
-  ContentPlayerPage,
-  ResultsPage,
-  InvoicesPage,
-  InvoiceDetailPage,
   ActivitiesPage,
   ActivityDetailPage,
+} from '@/features/ai/lazy';
+import { SyncStatusPage, SyncConflictsPage, SyncSettingsPage } from '@/features/sync/lazy';
+import {
   ProfilePage,
   SessionsPage,
   TwoFactorPage,
   LoginHistoryPage,
-  ForgotPasswordPage,
-  ResetPasswordPage,
-  StudentSubmissionPage,
-  SkillsOverviewPage,
-  SkillPassportPage,
-  SkillEvaluationPage,
-  SkillAnalyticsPage,
-  ComplianceDashboardPage,
-  CurriculumMappingPage,
-  ComplianceReportPage,
-  SyncStatusPage,
-  SyncConflictsPage,
-  SyncSettingsPage,
-  FinancialDashboardPage,
-  FinancialSnapshotsPage,
-  FinancialExportPage,
-  FeeStructuresPage,
-  FeeAssignmentsPage,
-  GenerateInvoicesPage,
-  SiblingPolicyPage,
-  LateFeePolicyPage,
-  PaymentPlansPage,
-  PaymentPlanDetailPage,
-  CmsContentListPage,
-  CmsContentUploadPage,
-  CmsContentEditPage,
-  CmsReviewQueuePage,
-  CmsQuizBuilderPage,
-  CmsAnalyticsPage,
-  QuestionBankPage,
-  QuestionBankImportPage,
-  GenerateQuizPage,
-  RubricsListPage,
-  RubricEditorPage,
-  RubricGradingPage,
-  TimetableConstraintsPage,
-  TimetableGeneratePage,
-  WritingWorkspacePage,
+  MyChildrenPage,
   SharedReviewPage,
   ReviewDetailPage,
-} from './LazyPages';
+  ParentChildLinksPage,
+  StudentHomePage,
+} from '@/features/user/lazy';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -160,9 +183,16 @@ function RoleRedirect() {
   return <Navigate to={target} replace />;
 }
 
+function ResultsRoute() {
+  const { user } = useAuth();
+  return <ResultsPage userRole={user?.role} />;
+}
+
 function App() {
   return (
     <div className="app-root">
+      <BrandSplash />
+      <ChartGradients />
       <OfflineIndicator />
       <ErrorBoundary onError={(error) => console.error(error)}>
         <Suspense fallback={<LoadingState />}>
@@ -172,6 +202,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/apply" element={<ApplyPage />} />
+            <Route path="/activate" element={<ActivatePage />} />
 
             {/* Protected routes with layout */}
             <Route
@@ -181,6 +213,16 @@ function App() {
                 </ProtectedRoute>
               }
             >
+              {/* Platform console (SUP) */}
+              <Route
+                path="/platform"
+                element={
+                  <ProtectedRoute roles={['SUP']}>
+                    <PlatformApplicationsPage />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Admin routes (ADM, DIR) */}
               <Route
                 path="/admin"
@@ -262,14 +304,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/admin/settings"
-                element={
-                  <ProtectedRoute roles={['ADM']}>
-                    <SchoolSettingsPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* /admin/settings was a duplicate of /admin/school (same page);
+                  redirect it to the canonical path. */}
+              <Route path="/admin/settings" element={<Navigate to="/admin/school" replace />} />
               <Route
                 path="/admin/school"
                 element={
@@ -302,14 +339,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/analytics"
-                element={
-                  <ProtectedRoute roles={['ADM', 'DIR']}>
-                    <AnalyticsDashboardPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Duplicate of /admin/analytics (same page); redirect. */}
+              <Route path="/analytics" element={<Navigate to="/admin/analytics" replace />} />
               <Route
                 path="/admin/batch-register"
                 element={
@@ -615,7 +646,7 @@ function App() {
               <Route
                 path="/micro-schools"
                 element={
-                  <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+                  <ProtectedRoute roles={['EDUCATOR', 'ADM', 'DIR', 'PAR']}>
                     <MicroSchoolListPage />
                   </ProtectedRoute>
                 }
@@ -623,7 +654,7 @@ function App() {
               <Route
                 path="/micro-schools/:id"
                 element={
-                  <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+                  <ProtectedRoute roles={['EDUCATOR', 'ADM', 'DIR', 'PAR']}>
                     <MicroSchoolDetailPage />
                   </ProtectedRoute>
                 }
@@ -631,7 +662,7 @@ function App() {
               <Route
                 path="/micro-schools/:id/enroll"
                 element={
-                  <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+                  <ProtectedRoute roles={['EDUCATOR', 'ADM', 'DIR', 'PAR']}>
                     <MicroSchoolEnrollPage />
                   </ProtectedRoute>
                 }
@@ -784,7 +815,10 @@ function App() {
               <Route
                 path="/teacher/games/new"
                 element={
-                  <ProtectedRoute roles={['TCH', 'ADM']}>
+                  <ProtectedRoute
+                    roles={['TCH', 'ADM']}
+                    permissions={[PERMISSIONS.GAME_CONFIG_MANAGE]}
+                  >
                     <GameConfigEditor />
                   </ProtectedRoute>
                 }
@@ -832,7 +866,7 @@ function App() {
               <Route
                 path="/reports"
                 element={
-                  <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+                  <ProtectedRoute roles={['TCH', 'ADM', 'DIR']}>
                     <ReportsPage />
                   </ProtectedRoute>
                 }
@@ -896,7 +930,7 @@ function App() {
               <Route
                 path="/content"
                 element={
-                  <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM']}>
+                  <ProtectedRoute roles={['PAR', 'ADM']}>
                     <ContentPage />
                   </ProtectedRoute>
                 }
@@ -918,13 +952,16 @@ function App() {
                 }
               />
               <Route
-                path="/results"
+                path="/grades"
                 element={
                   <ProtectedRoute roles={['STD', 'PAR']}>
-                    <ResultsPage />
+                    <ResultsRoute />
                   </ProtectedRoute>
                 }
               />
+              {/* Old /results path renamed to /grades; keep a redirect for
+                  existing links/bookmarks. */}
+              <Route path="/results" element={<Navigate to="/grades" replace />} />
               <Route
                 path="/quizzes/attempts/:id/results"
                 element={
@@ -1081,13 +1118,10 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Duplicate of /attendance/justify (same page); redirect. */}
               <Route
                 path="/justification"
-                element={
-                  <ProtectedRoute roles={['PAR']}>
-                    <ParentJustificationPage />
-                  </ProtectedRoute>
-                }
+                element={<Navigate to="/attendance/justify" replace />}
               />
               {/* Rubrics routes */}
               <Route

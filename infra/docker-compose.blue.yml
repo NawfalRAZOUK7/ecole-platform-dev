@@ -67,6 +67,16 @@ services:
     networks:
       - ecole-prod-network
     restart: unless-stopped
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import redis, pathlib; url=pathlib.Path('/run/secrets/redis_url').read_text().strip(); redis.from_url(url).ping()"
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
 
 secrets:
   jwt_secret_key:
@@ -81,4 +91,6 @@ secrets:
 networks:
   ecole-prod-network:
     external: true
+    # Name prefix "infra_" comes from running `docker compose` from the infra/ directory.
+    # Must match the network created by docker-compose.prod.yml.
     name: infra_ecole-prod-network

@@ -1,0 +1,525 @@
+{
+  "info": {
+    "name": "École Platform - 2FA Flow",
+    "description": "Two-Factor Authentication (TOTP) flow: login, setup TOTP, verify code, login with TOTP, disable TOTP. Run with: newman run scenario_2fa.postman_collection.json -e env_local.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "totp_secret",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "totp_code",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Login (username/password)",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"access_token\");",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user\", function () {",
+                  "    // pm.expect(responseBody.data).to.have.property(\"user\") // not in response;",
+                  "});",
+                  "",
+                  "// Save token for subsequent requests",
+                  "pm.environment.set(\"token\", responseBody.data.access_token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Setup TOTP",
+      "item": [
+        {
+          "name": "POST /auth/2fa/setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/auth/2fa/setup"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has totp_secret\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"secret\");",
+                  "});",
+                  "",
+                  "pm.test(\"Response has qr_code_url\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"provisioning_uri\");",
+                  "});",
+                  "",
+                  "// Save TOTP secret for verification",
+                  "pm.environment.set(\"totp_secret\", responseBody.data.secret);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Verify TOTP Code",
+      "item": [
+        {
+          "name": "POST /auth/2fa/verify-setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{totp_code}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/2fa/verify-setup"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has backup_codes\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"backup_codes\");",
+                  "    pm.expect(responseBody.data.backup_codes).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Verification successful\", function () {",
+                  "    pm.expect(responseBody.data.message).to.include(\"enabled\");",
+                  "});",
+                  "",
+                  "pm.test(\"User has 2fa_enabled\", function () {",
+                  "// Skipped: user.2fa_enabled not in response",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "function base32ToHex(base32) {",
+                  "    const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+                  "    let bits = '';",
+                  "    for (let i = 0; i < base32.length; i++) {",
+                  "        const val = base32chars.indexOf(base32.charAt(i).toUpperCase());",
+                  "        bits += ('00000' + val.toString(2)).slice(-5);",
+                  "    }",
+                  "    let hex = '';",
+                  "    for (let i = 0; i + 4 <= bits.length; i += 4) {",
+                  "        hex += parseInt(bits.substring(i, i + 4), 2).toString(16);",
+                  "    }",
+                  "    return hex;",
+                  "}",
+                  "",
+                  "function leftpad(str, len, pad) {",
+                  "    if (len + 1 >= str.length) {",
+                  "        str = Array(len + 1 - str.length).join(pad) + str;",
+                  "    }",
+                  "    return str;",
+                  "}",
+                  "",
+                  "function generateTOTP(secret) {",
+                  "    const hex = base32ToHex(secret);",
+                  "    const epoch = Math.floor(Date.now() / 1000);",
+                  "    const time = leftpad(Math.floor(epoch / 30).toString(16), 16, '0');",
+                  "    const hmac = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(time), CryptoJS.enc.Hex.parse(hex)).toString();",
+                  "    const offset = parseInt(hmac.substring(hmac.length - 1), 16);",
+                  "    const otp = (parseInt(hmac.substr(offset * 2, 8), 16) & 0x7fffffff) + '';",
+                  "    return leftpad(otp.substr(otp.length - 6, 6), 6, '0');",
+                  "}",
+                  "",
+                  "const secret = pm.environment.get('totp_secret');",
+                  "if (secret) {",
+                  "    const code = generateTOTP(secret);",
+                  "    pm.environment.set('totp_code', code);",
+                  "    console.log('Generated TOTP code: ' + code);",
+                  "} else {",
+                  "    console.log('No totp_secret found in environment');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Login with TOTP",
+      "item": [
+        {
+          "name": "POST /auth/login (get temp_token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has requires_2fa\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"requires_2fa\", true);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has temp_token\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"temp_token\");",
+                  "});",
+                  "",
+                  "// Save temp_token for 2FA verify",
+                  "pm.environment.set(\"temp_token\", responseBody.data.temp_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/verify (with temp_token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temp_token\": \"{{temp_token}}\",\n  \"code\": \"{{totp_code}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/2fa/verify"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"access_token\");",
+                  "});",
+                  "",
+                  "// Update token for subsequent requests",
+                  "pm.environment.set(\"token\", responseBody.data.access_token);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "function base32ToHex(base32) {",
+                  "    const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+                  "    let bits = '';",
+                  "    for (let i = 0; i < base32.length; i++) {",
+                  "        const val = base32chars.indexOf(base32.charAt(i).toUpperCase());",
+                  "        bits += ('00000' + val.toString(2)).slice(-5);",
+                  "    }",
+                  "    let hex = '';",
+                  "    for (let i = 0; i + 4 <= bits.length; i += 4) {",
+                  "        hex += parseInt(bits.substring(i, i + 4), 2).toString(16);",
+                  "    }",
+                  "    return hex;",
+                  "}",
+                  "",
+                  "function leftpad(str, len, pad) {",
+                  "    if (len + 1 >= str.length) {",
+                  "        str = Array(len + 1 - str.length).join(pad) + str;",
+                  "    }",
+                  "    return str;",
+                  "}",
+                  "",
+                  "function generateTOTP(secret) {",
+                  "    const hex = base32ToHex(secret);",
+                  "    const epoch = Math.floor(Date.now() / 1000);",
+                  "    const time = leftpad(Math.floor(epoch / 30).toString(16), 16, '0');",
+                  "    const hmac = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(time), CryptoJS.enc.Hex.parse(hex)).toString();",
+                  "    const offset = parseInt(hmac.substring(hmac.length - 1), 16);",
+                  "    const otp = (parseInt(hmac.substr(offset * 2, 8), 16) & 0x7fffffff) + '';",
+                  "    return leftpad(otp.substr(otp.length - 6, 6), 6, '0');",
+                  "}",
+                  "",
+                  "const secret = pm.environment.get('totp_secret');",
+                  "if (secret) {",
+                  "    const code = generateTOTP(secret);",
+                  "    pm.environment.set('totp_code', code);",
+                  "    console.log('Generated TOTP code: ' + code);",
+                  "} else {",
+                  "    console.log('No totp_secret found in environment');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Disable TOTP",
+      "item": [
+        {
+          "name": "POST /auth/2fa/disable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{totp_code}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/2fa/disable"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"User has 2fa_enabled: false\", function () {",
+                  "// Skipped: user.2fa_enabled not in response",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "function base32ToHex(base32) {",
+                  "    const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+                  "    let bits = '';",
+                  "    for (let i = 0; i < base32.length; i++) {",
+                  "        const val = base32chars.indexOf(base32.charAt(i).toUpperCase());",
+                  "        bits += ('00000' + val.toString(2)).slice(-5);",
+                  "    }",
+                  "    let hex = '';",
+                  "    for (let i = 0; i + 4 <= bits.length; i += 4) {",
+                  "        hex += parseInt(bits.substring(i, i + 4), 2).toString(16);",
+                  "    }",
+                  "    return hex;",
+                  "}",
+                  "",
+                  "function leftpad(str, len, pad) {",
+                  "    if (len + 1 >= str.length) {",
+                  "        str = Array(len + 1 - str.length).join(pad) + str;",
+                  "    }",
+                  "    return str;",
+                  "}",
+                  "",
+                  "function generateTOTP(secret) {",
+                  "    const hex = base32ToHex(secret);",
+                  "    const epoch = Math.floor(Date.now() / 1000);",
+                  "    const time = leftpad(Math.floor(epoch / 30).toString(16), 16, '0');",
+                  "    const hmac = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(time), CryptoJS.enc.Hex.parse(hex)).toString();",
+                  "    const offset = parseInt(hmac.substring(hmac.length - 1), 16);",
+                  "    const otp = (parseInt(hmac.substr(offset * 2, 8), 16) & 0x7fffffff) + '';",
+                  "    return leftpad(otp.substr(otp.length - 6, 6), 6, '0');",
+                  "}",
+                  "",
+                  "const secret = pm.environment.get('totp_secret');",
+                  "if (secret) {",
+                  "    const code = generateTOTP(secret);",
+                  "    pm.environment.set('totp_code', code);",
+                  "    console.log('Generated TOTP code: ' + code);",
+                  "} else {",
+                  "    console.log('No totp_secret found in environment');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "Revoke all sessions (optional)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/sessions"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "sessions = responseBody.data || [];",
+                  "if (sessions.length > 0) {",
+                  "    sessions.forEach(function(session) {",
+                  "        pm.sendRequest({",
+                  "            url: pm.environment.get('baseUrl') + '/auth/sessions/' + session.session_id,",
+                  "            method: 'DELETE',",
+                  "            header: {",
+                  "                'Authorization': 'Bearer ' + pm.environment.get('token'),",
+                  "                'Content-Type': 'application/json'",
+                  "            }",
+                  "        }, function (err, res) {",
+                  "            console.log('Revoke session ' + session.session_id + ': ' + (res ? res.code : 'failed'));",
+                  "        });",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

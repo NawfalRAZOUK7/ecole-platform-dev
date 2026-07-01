@@ -9,7 +9,7 @@ Manifest format (assets/stories/manifest.json):
   {
     "title": "قصة الأرنب الشجاع",
     "content_type": "STORY",
-    "level_band": "K1",
+    "level_band": "GS",
     "language": "ar",
     "subject": "arabic",
     "letter": "أ",

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/micro_school.dart';
-import 'package:ecole_platform/features/micro-schools/micro_school_detail_screen.dart';
-import 'package:ecole_platform/features/micro-schools/micro_school_list_screen.dart';
+import 'package:ecole_platform/domain/entities/school/micro_school.dart';
+import 'package:ecole_platform/features/school/micro_schools/micro_school_detail_screen.dart';
+import 'package:ecole_platform/features/school/micro_schools/micro_school_list_screen.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/mock_repositories.dart';

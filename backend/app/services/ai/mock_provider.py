@@ -174,7 +174,7 @@ class MockProvider:
                     "content_type": "enrichment",
                 }
             )
-        if level_band in {"CP", "CE1", "CE2"}:
+        if level_band in {"1AEP", "2AEP", "3AEP"}:
             recommendations.append(
                 {
                     "title": "Add a short reading-comprehension practice session",

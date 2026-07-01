@@ -27,6 +27,8 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
+      serviceAccountName: {{ include "ecole-platform.serviceAccountName" . }}
+      automountServiceAccountToken: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -39,6 +41,10 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           command: ["python", "-m", "arq", "app.core.tasks.WorkerSettings"]
           envFrom:
             - configMapRef:
@@ -67,6 +73,31 @@ spec:
                   optional: true
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
+          startupProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - |
+                  import redis, os, sys
+                  r = redis.from_url(os.environ["REDIS_URL"])
+                  sys.exit(0 if r.ping() else 1)
+            failureThreshold: 20
+            periodSeconds: 5
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - |
+                  import redis, os, sys
+                  r = redis.from_url(os.environ["REDIS_URL"])
+                  sys.exit(0 if r.ping() else 1)
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             exec:
               command:
@@ -80,3 +111,11 @@ spec:
             periodSeconds: 60
             timeoutSeconds: 10
             failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Mi

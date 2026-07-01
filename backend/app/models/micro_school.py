@@ -22,6 +22,7 @@ from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, TimestampMixin
+from app.models.taxonomy import Currency, Language, MicroSchoolType
 
 ALLOWED_MICRO_CURRENCIES = {"MAD", "EUR", "USD"}
 ALLOWED_MICRO_LANGUAGES = {"ar", "fr", "en"}
@@ -98,6 +99,20 @@ class MicroSchool(TimestampMixin, Base):
         nullable=False,
         default=MicroSchoolStatus.ACTIVE.value,
     )
+    # Informal-provider type (see taxonomy.MicroSchoolType): rawd / msid /
+    # non_formel / general. ``type_detail`` is free text the educator fills in
+    # only when ``type == general`` (the user-input exception).
+    type: Mapped[str] = mapped_column(
+        PgEnum(
+            MicroSchoolType,
+            name="micro_school_type_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=MicroSchoolType.GENERAL.value,
+    )
+    type_detail: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     educator = relationship("User", foreign_keys=[educator_id])
     groups: Mapped[list["MicroGroup"]] = relationship(
@@ -183,6 +198,10 @@ class MicroEnrollment(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
+    student_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     date_of_birth: Mapped[date] = mapped_column(Date, nullable=False)
     enrolled_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -202,6 +221,7 @@ class MicroEnrollment(TimestampMixin, Base):
 
     micro_group: Mapped["MicroGroup"] = relationship(back_populates="enrollments")
     parent = relationship("User", foreign_keys=[parent_id])
+    student_user = relationship("User", foreign_keys=[student_user_id])
     payments: Mapped[list["MicroPayment"]] = relationship(
         back_populates="child_enrollment",
         cascade="all, delete-orphan",
@@ -216,6 +236,7 @@ class MicroEnrollment(TimestampMixin, Base):
     __table_args__ = (
         Index("idx_micro_enrollments_group_status", "micro_group_id", "status"),
         Index("idx_micro_enrollments_parent_status", "parent_id", "status"),
+        Index("idx_micro_enrollments_student_user", "student_user_id"),
     )
 
     @validates("child_name")
@@ -250,7 +271,16 @@ class MicroPayment(TimestampMixin, Base):
         nullable=False,
     )
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     period_type: Mapped[str] = mapped_column(
         PgEnum(
             MicroPaymentPeriodType,
@@ -328,7 +358,16 @@ class MicroResource(TimestampMixin, Base):
         nullable=False,
     )
     age_group: Mapped[str] = mapped_column(String(20), nullable=False)
-    language: Mapped[str] = mapped_column(String(5), nullable=False, default="ar")
+    language: Mapped[str] = mapped_column(
+        PgEnum(
+            Language,
+            name="language_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Language.AR.value,
+    )
     file_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_premium: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 

@@ -24,70 +24,98 @@ on:
       - "scripts/generate-openapi.sh"
       - ".github/workflows/web-ci.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
       - run: npx tsc --noEmit
       - run: npm run lint
 
   unit-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: lint-and-typecheck
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            target: tests/unit/api/
+          - name: features-academic
+            target: tests/unit/features/academic/
+          - name: features-billing
+            target: tests/unit/features/billing/
+          - name: features-content-lms
+            target: tests/unit/features/content/ tests/unit/features/lms/
+          - name: features-other
+            target: tests/unit/features/admin/ tests/unit/features/ai/ tests/unit/features/auth/ tests/unit/features/communication/ tests/unit/features/reports/ tests/unit/features/school/ tests/unit/features/sync/ tests/unit/features/user/
+          - name: shared-app-core
+            target: tests/unit/app/ tests/unit/core/ tests/unit/entities/ tests/unit/pages/ tests/unit/services/ tests/unit/shared/ tests/unit/widgets/ tests/unit/auth-context.test.tsx
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
-      - run: npm run test -- --reporter=default --reporter=junit --outputFile=test-results.xml
-      - run: npm run test:coverage
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
+      - run: npm run test -- ${{ matrix.target }} --maxWorkers=1 --reporter=default --reporter=junit --outputFile=test-results-${{ matrix.name }}.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
-          path: web/test-results.xml
+          name: test-results-${{ matrix.name }}
+          path: web/test-results-${{ matrix.name }}.xml
+
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: unit-tests
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
+      - run: npm run test:coverage -- tests/unit/ --maxWorkers=1 --fileParallelism=false
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report
           path: web/coverage/
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: web/coverage
+          flags: web-unit
+          fail_ci_if_error: false
+
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: lint-and-typecheck
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
       - run: npm run build
       - name: Check bundle sizes
         run: |

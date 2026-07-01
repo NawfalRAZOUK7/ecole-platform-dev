@@ -1,15 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/data/local_store/attendance_store.dart';
-import 'package:ecole_platform/data/local_store/cache_store.dart';
-import 'package:ecole_platform/data/local_store/database.dart';
-import 'package:ecole_platform/data/local_store/documents_store.dart';
-import 'package:ecole_platform/data/local_store/events_store.dart';
-import 'package:ecole_platform/data/local_store/notifications_store.dart';
-import 'package:ecole_platform/data/local_store/offline_queue.dart';
-import 'package:ecole_platform/data/local_store/quiz_offline_store.dart';
-import 'package:ecole_platform/data/local_store/reports_store.dart';
+import 'package:ecole_platform/core/storage/attendance_store.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
+import 'package:ecole_platform/core/storage/database.dart';
+import 'package:ecole_platform/core/storage/documents_store.dart';
+import 'package:ecole_platform/core/storage/events_store.dart';
+import 'package:ecole_platform/core/storage/notifications_store.dart';
+import 'package:ecole_platform/core/storage/offline_queue.dart';
+import 'package:ecole_platform/core/storage/quiz_offline_store.dart';
+import 'package:ecole_platform/core/storage/reports_store.dart';
 
 import '../helpers/test_database.dart';
 import '../helpers/test_mocks.dart';
@@ -78,23 +78,26 @@ void main() {
         final db = await AppDatabase.instance;
 
         await store.put(
-            'feed:first',
-            const [
-              {'id': 'f-1'}
-            ],
-            60);
+          'feed:first',
+          const [
+            {'id': 'f-1'},
+          ],
+          60,
+        );
         await store.put(
-            'feed:second',
-            const [
-              {'id': 'f-2'}
-            ],
-            60);
+          'feed:second',
+          const [
+            {'id': 'f-2'},
+          ],
+          60,
+        );
         await store.put(
-            'results:first',
-            const [
-              {'id': 'r-1'}
-            ],
-            1);
+          'results:first',
+          const [
+            {'id': 'r-1'},
+          ],
+          1,
+        );
         await db.update(
           'cache_entries',
           {'created_at': 0},
@@ -207,7 +210,7 @@ void main() {
           '2026-01',
           '2026-02',
           '2026-03',
-          '2026-04'
+          '2026-04',
         ]) {
           await store.replaceMonth(
             month,

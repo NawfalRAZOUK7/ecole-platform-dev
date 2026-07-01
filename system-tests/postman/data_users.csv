@@ -1,0 +1,5 @@
+email,password,role,school_id
+admin@ecole-benani.ma,admin123,ADM,00000000-0000-4000-8000-000000000001
+teacher1@ecole-benani.ma,teacher123,TCH,00000000-0000-4000-8000-000000000001
+parent1@ecole-benani.ma,parent123,PAR,00000000-0000-4000-8000-000000000001
+student1@ecole-benani.ma,student123,STD,00000000-0000-4000-8000-000000000001

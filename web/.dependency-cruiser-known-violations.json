@@ -1,0 +1,390 @@
+[
+  {
+    "type": "dependency",
+    "from": "src/features/academic/attendance/ui/AttendanceAnalyticsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/academic/attendance/ui/AttendanceHistoryPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/academic/attendance/ui/AttendancePage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/academic/skills/ui/SkillEvaluationPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/academic/skills/ui/SkillPassportPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/academic/skills/ui/SkillsOverviewPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/academic/timetable/ui/TimetablePage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/admin/ui/UsersPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/ai/games/ui/GamesListPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/ai/rewards/ui/LeaderboardPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/ai/rewards/ui/RewardsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/auth/lazy.ts",
+    "to": "src/pages/auth/ForgotPasswordPage.tsx",
+    "unresolvedTo": "@/pages/auth/ForgotPasswordPage",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "dynamic-import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/auth/lazy.ts",
+    "to": "src/pages/auth/LoginPage.tsx",
+    "unresolvedTo": "@/pages/auth/LoginPage",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "dynamic-import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/auth/lazy.ts",
+    "to": "src/pages/auth/ResetPasswordPage.tsx",
+    "unresolvedTo": "@/pages/auth/ResetPasswordPage",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "dynamic-import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/billing/budgets/ui/BudgetDetailPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/communication/announcements/ui/AnnouncementsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/communication/calendar/ui/CalendarPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/communication/calendar/ui/EventDetailPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/communication/messages/ui/ChatPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/communication/messages/ui/ConversationsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/content/catalog/ui/ContentDetailPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/content/cms/ui/CmsLayout.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/content/cms/ui/CmsLibraryBrowseTab.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/content/documents/ui/DocumentsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/content/documents/ui/StudentDocumentsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/lms/question-bank/ui/QuestionBankPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/reports/ui/ReportsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/school/settings/ui/SchoolSettingsPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/user/profile/model/profile.types.ts",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": [
+      "aliased",
+      "aliased-tsconfig",
+      "aliased-tsconfig-paths",
+      "local",
+      "type-only",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/user/profile/ui/ProfilePage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/user/profile/ui/TwoFactorPage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/features/user/student/ui/StudentHomePage.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "features-do-not-import-higher-layers"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/widgets/layout/Layout.tsx",
+    "to": "src/app/providers/AuthContext.tsx",
+    "unresolvedTo": "@/app/providers/AuthContext",
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths", "local", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "widgets-do-not-import-higher-layers"
+    }
+  }
+]

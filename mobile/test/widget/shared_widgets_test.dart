@@ -40,11 +40,11 @@ void main() {
     testWidgets('AppDataTable shows a skeleton while loading', (tester) async {
       await pumpApp(
         tester,
-        AppDataTable<_TableRowData>(
-          columns: const [
+        const AppDataTable<_TableRowData>(
+          columns: [
             AppColumn(header: 'Name', cellBuilder: _cellPlaceholder),
           ],
-          rows: const [],
+          rows: [],
           isLoading: true,
         ),
       );
@@ -56,11 +56,11 @@ void main() {
         (tester) async {
       await pumpApp(
         tester,
-        AppDataTable<_TableRowData>(
-          columns: const [
+        const AppDataTable<_TableRowData>(
+          columns: [
             AppColumn(header: 'Name', cellBuilder: _cellPlaceholder),
           ],
-          rows: const [],
+          rows: [],
           emptyMessage: 'No rows yet',
         ),
       );
@@ -325,7 +325,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Réessayer'));
       await tester.pump();
 
       expect(retried, isTrue);
@@ -374,7 +374,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byTooltip('Clear search'));
+      await tester.tap(find.byTooltip('Effacer la recherche'));
       await tester.pump();
 
       expect(currentSearch, isEmpty);

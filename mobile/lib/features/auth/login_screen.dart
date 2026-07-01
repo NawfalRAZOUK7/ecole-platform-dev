@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/widgets/ecole_logo_mark.dart';
 import 'auth_provider.dart';
 
 /// Default school ID from seed data.
@@ -68,6 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     // 2FA verification step
     if (authState.requires2fa) {
@@ -85,8 +88,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Semantics(
                       excludeSemantics: true,
-                      child: Icon(Icons.security,
-                          size: 64, color: theme.colorScheme.primary),
+                      child: Icon(
+                        Icons.security,
+                        size: 64,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -119,8 +125,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline,
-                                color: theme.colorScheme.error, size: 20),
+                            Icon(
+                              Icons.error_outline,
+                              color: theme.colorScheme.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -158,9 +167,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         labelText: _useBackupCode
                             ? 'Code de secours'
                             : 'Code d\'authentification',
-                        prefixIcon: Icon(_useBackupCode
-                            ? Icons.vpn_key_outlined
-                            : Icons.pin_outlined),
+                        prefixIcon: Icon(
+                          _useBackupCode
+                              ? Icons.vpn_key_outlined
+                              : Icons.pin_outlined,
+                        ),
                         border: const OutlineInputBorder(),
                         counterText: '',
                       ),
@@ -185,11 +196,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: theme.colorScheme.onPrimary),
+                                  strokeWidth: 2,
+                                  color: theme.colorScheme.onPrimary,
+                                ),
                               )
-                            : const Text('Vérifier',
-                                style: TextStyle(fontSize: 16)),
+                            : const Text(
+                                'Vérifier',
+                                style: TextStyle(fontSize: 16),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -210,14 +224,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 _totpController.clear();
                               });
                             },
-                            child: Text(_useBackupCode
-                                ? 'Utiliser l\'application'
-                                : 'Utiliser un code de secours'),
+                            child: Text(
+                              _useBackupCode
+                                  ? 'Utiliser l\'application'
+                                  : 'Utiliser un code de secours',
+                            ),
                           ),
                         ),
                         TextButton(
                           onPressed: _handleCancel2fa,
-                          child: const Text('Annuler'),
+                          child: Text(t.t('common.cancel')),
                         ),
                       ],
                     ),
@@ -242,7 +258,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               end: Alignment.bottomRight,
               colors: [
                 theme.colorScheme.surface,
-                Color.lerp(theme.colorScheme.surface, theme.colorScheme.primary, 0.05) ?? theme.colorScheme.surface,
+                Color.lerp(
+                      theme.colorScheme.surface,
+                      theme.colorScheme.primary,
+                      0.05,
+                    ) ??
+                    theme.colorScheme.surface,
                 theme.colorScheme.surface,
               ],
             ),
@@ -261,7 +282,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          theme.colorScheme.primary.withOpacity(0.08),
+                          theme.colorScheme.primary.withValues(alpha: 0.08),
                           Colors.transparent,
                         ],
                       ),
@@ -279,7 +300,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          theme.colorScheme.secondary.withOpacity(0.08),
+                          theme.colorScheme.secondary.withValues(alpha: 0.08),
                           Colors.transparent,
                         ],
                       ),
@@ -298,193 +319,261 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           // Logo / Title
                           Semantics(
                             excludeSemantics: true,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    theme.colorScheme.primary,
-                                    theme.colorScheme.secondary,
+                            child: Center(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 10),
+                                    ),
                                   ],
                                 ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary.withOpacity(0.3),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
+                                child: const EcoleLogoMark(size: 104),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'École Platform',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Connexion',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+
+                          // OAuth social login buttons
+                          Semantics(
+                            button: true,
+                            label: 'Se connecter avec Google',
+                            child: FilledButton.icon(
+                              onPressed: authState.isLoading
+                                  ? null
+                                  : () => ref
+                                      .read(authProvider.notifier)
+                                      .startOAuthLogin(
+                                        'google',
+                                        _schoolIdController.text.trim(),
+                                      ),
+                              icon: const Icon(Icons.login, size: 20),
+                              label: Text(t.t('auth.signInWithGoogle')),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                side: const BorderSide(color: Colors.black12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Semantics(
+                            button: true,
+                            label: 'Se connecter avec Microsoft',
+                            child: FilledButton.icon(
+                              onPressed: authState.isLoading
+                                  ? null
+                                  : () => ref
+                                      .read(authProvider.notifier)
+                                      .startOAuthLogin(
+                                        'microsoft',
+                                        _schoolIdController.text.trim(),
+                                      ),
+                              icon: const Icon(Icons.business, size: 20),
+                              label: Text(t.t('auth.signInWithMicrosoft')),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF0078D4),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              const Expanded(child: Divider()),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(t.t('auth.or')),
+                              ),
+                              const Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Error banner
+                          if (authState.error != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.errorContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: theme.colorScheme.error,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      authState.error!,
+                                      style: TextStyle(
+                                        color:
+                                            theme.colorScheme.onErrorContainer,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, size: 18),
+                                    onPressed: () => ref
+                                        .read(authProvider.notifier)
+                                        .clearError(),
                                   ),
                                 ],
                               ),
-                              child: const Icon(
-                                Icons.school,
-                                size: 48,
-                                color: Colors.white,
-                              ),
                             ),
-                          ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'École Platform',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Connexion',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Error banner
-                    if (authState.error != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline,
-                                color: theme.colorScheme.error, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                authState.error!,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onErrorContainer,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () =>
-                                  ref.read(authProvider.notifier).clearError(),
-                            ),
+                            const SizedBox(height: 16),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
 
-                    // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(
-                        labelText: 'Adresse email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Email requis' : null,
-                      enabled: !authState.isLoading,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password field
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      autofillHints: const [AutofillHints.password],
-                      decoration: const InputDecoration(
-                        labelText: 'Mot de passe',
-                        prefixIcon: Icon(Icons.lock_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'Mot de passe requis'
-                          : null,
-                      enabled: !authState.isLoading,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // School ID field
-                    TextFormField(
-                      controller: _schoolIdController,
-                      decoration: const InputDecoration(
-                        labelText: 'ID Établissement',
-                        prefixIcon: Icon(Icons.business),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'ID établissement requis'
-                          : null,
-                      enabled: !authState.isLoading,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Submit button
-                    Semantics(
-                      button: true,
-                      label: 'Se connecter',
-                      child: FilledButton(
-                        onPressed: authState.isLoading ? null : _handleLogin,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: authState.isLoading
-                            ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: theme.colorScheme.onPrimary,
-                                ),
-                              )
-                            : const Text('Se connecter',
-                                style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Semantics(
-                        button: true,
-                        label: 'Réinitialiser le mot de passe',
-                        child: TextButton(
-                          onPressed: authState.isLoading
-                              ? null
-                              : () => context.push('/forgot-password'),
-                          child: const Text('Mot de passe oublié ?'),
-                        ),
-                      ),
-                    ),
-
-                    // Register link (Phase 5C)
-                    Center(
-                      child: Semantics(
-                        button: true,
-                        label: 'Ouvrir l’inscription avec un code d’invitation',
-                        child: TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: const Text(
-                            'Vous avez un code d\'invitation ? Inscrivez-vous',
+                          // Email field
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
+                            decoration: InputDecoration(
+                              labelText: t.t('auth.email'),
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: const OutlineInputBorder(),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? t.t('auth.emailRequired')
+                                : null,
+                            enabled: !authState.isLoading,
                           ),
-                        ),
+                          const SizedBox(height: 16),
+
+                          // Password field
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            autofillHints: const [AutofillHints.password],
+                            decoration: InputDecoration(
+                              labelText: t.t('auth.password'),
+                              prefixIcon: const Icon(Icons.lock_outlined),
+                              border: const OutlineInputBorder(),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? t.t('auth.passwordRequired')
+                                : null,
+                            enabled: !authState.isLoading,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // School ID field
+                          TextFormField(
+                            controller: _schoolIdController,
+                            decoration: InputDecoration(
+                              labelText: t.t('auth.schoolId'),
+                              prefixIcon: const Icon(Icons.business),
+                              border: const OutlineInputBorder(),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? 'ID établissement requis'
+                                : null,
+                            enabled: !authState.isLoading,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Submit button
+                          Semantics(
+                            button: true,
+                            label: 'Se connecter',
+                            child: FilledButton(
+                              onPressed:
+                                  authState.isLoading ? null : _handleLogin,
+                              style: FilledButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                              ),
+                              child: authState.isLoading
+                                  ? SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: theme.colorScheme.onPrimary,
+                                      ),
+                                    )
+                                  : Text(
+                                      t.t('auth.signIn'),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Semantics(
+                              button: true,
+                              label: 'Réinitialiser le mot de passe',
+                              child: TextButton(
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : () => context.push('/forgot-password'),
+                                child: Text(t.t('auth.forgotPassword')),
+                              ),
+                            ),
+                          ),
+
+                          // Register link (Phase 5C)
+                          Center(
+                            child: Semantics(
+                              button: true,
+                              label:
+                                  'Ouvrir l’inscription avec un code d’invitation',
+                              child: TextButton(
+                                onPressed: () => context.go('/register'),
+                                child: const Text(
+                                  'Vous avez un code d\'invitation ? Inscrivez-vous',
+                                ),
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.push('/apply'),
+                            child: const Text(
+                              "Demande d'inscription (école / éducateur)",
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-            ),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 }

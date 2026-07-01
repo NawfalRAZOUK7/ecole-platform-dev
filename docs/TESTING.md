@@ -47,6 +47,47 @@ pytest -m "security" tests/
 pytest tests/unit/test_rewards_service.py -v
 ```
 
+### Dockerized Test Runner (`dtest*`)
+
+Les tests backend tournent dans Docker en réutilisant les conteneurs dev
+(postgres, redis, minio, mock-oauth sur `ecole-network`) avec une base de données
+isolée `ecole_platform_test`. Web et mobile restent hors de cette matrice.
+
+```bash
+# Pipeline séquentiel complet : unit → integration → security → contract → edge
+# S'arrête au premier échec ; génère la couverture combinée si tout passe
+make dtest-seq
+
+# Idem + ouvre le rapport HTML de couverture
+make dtest-cov
+
+# Suite individuelle (ne réinitialise pas la DB entre les appels)
+make dtest-unit
+make dtest-integration
+make dtest-security
+make dtest-contract
+make dtest-edge
+
+# Démarrer / arrêter la stack de support
+make dtest-up
+make dtest-down
+
+# Cibler un sous-dossier spécifique
+$(DC_DT) --profile tests run --rm -e PYTEST_TARGET=tests/integration/api/auth tests integration
+```
+
+Artefacts écrits dans `test-artifacts/manual/backend/` :
+
+- `seq/<group>/junit.xml` — résultats pytest par groupe (pipeline séquentiel)
+- `seq/htmlcov/index.html` — couverture HTML combinée (tous groupes)
+- `seq/coverage.xml` — couverture XML (CI)
+
+Variables utiles :
+
+- `PYTEST_TARGET=tests/integration/api/auth` — restreindre le chemin pytest
+- `COV_FAIL_UNDER=90` — seuil de couverture (défaut : 0)
+- `RESET_TEST_DB=0` — ne pas réinitialiser la DB avant le run
+
 ### Fixtures clés
 
 - `app` — Instance FastAPI configurée pour les tests

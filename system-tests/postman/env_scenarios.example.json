@@ -1,0 +1,127 @@
+{
+  "id": "env-scenarios-example",
+  "name": "Scenario Tests Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "email",
+      "value": "test.user@example.com",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "password",
+      "value": "YourSecurePassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "new_password",
+      "value": "NewSecurePassword456!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "totp_code",
+      "value": "123456",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "reset_request_id",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "otp",
+      "value": "123456",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "temp_token",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "invite_code",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "new_user_email",
+      "value": "new.user@example.com",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "new_user_password",
+      "value": "SecurePassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "registration_school_id",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "testmail_api_key",
+      "value": "YOUR_TESTMAIL_API_KEY",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "testmail_namespace",
+      "value": "ecole-platform-test",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "testmail_test_email",
+      "value": "test@ecole-platform.testmail.app",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "webhook_secret",
+      "value": "YOUR_WEBHOOK_SECRET",
+      "type": "secret",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

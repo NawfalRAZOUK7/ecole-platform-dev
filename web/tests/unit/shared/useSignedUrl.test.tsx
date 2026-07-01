@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { http } from 'msw';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSignedUrlStaleTime, useSignedUrl } from '@/shared/hooks/useSignedUrl';
-import type { DownloadMetadata } from '@/services/api/client';
+import type { DownloadMetadata } from '@/core/api/client';
 import { renderWithProviders } from '../../utils/render';
-import { server } from '../../utils/mocks';
+import { apiResponse, server } from '../../utils/mocks';
 
 function SignedUrlProbe({ path }: { path: string }) {
   const signedUrl = useSignedUrl(path);
@@ -24,6 +24,10 @@ function SignedUrlProbe({ path }: { path: string }) {
 }
 
 describe('useSignedUrl', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('computes stale time at 80 percent of the signed URL TTL', () => {
     const fetchedAt = Date.parse('2026-05-05T12:00:00.000Z');
     const metadata: DownloadMetadata = {
@@ -43,7 +47,7 @@ describe('useSignedUrl', () => {
     server.use(
       http.get('/api/v1/content-items/content-1/stream', () => {
         calls += 1;
-        return HttpResponse.json({
+        return apiResponse({
           download_url: `https://minio.example.test/video.mp4?X-Amz-Signature=${calls}`,
           expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
           mime_type: 'video/mp4',

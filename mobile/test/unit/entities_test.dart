@@ -1,17 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecole_platform/domain/entities/attendance.dart';
-import 'package:ecole_platform/domain/entities/budget.dart';
-import 'package:ecole_platform/domain/entities/compliance.dart';
-import 'package:ecole_platform/domain/entities/financial_health.dart';
-import 'package:ecole_platform/domain/entities/gradebook.dart';
-import 'package:ecole_platform/domain/entities/micro_school.dart';
-import 'package:ecole_platform/domain/entities/question_bank.dart';
-import 'package:ecole_platform/domain/entities/rubric.dart';
-import 'package:ecole_platform/domain/entities/skills.dart';
-import 'package:ecole_platform/domain/entities/sync.dart';
-import 'package:ecole_platform/domain/entities/timetable.dart';
-import 'package:ecole_platform/domain/entities/user.dart';
+import 'package:ecole_platform/domain/entities/academic/attendance.dart';
+import 'package:ecole_platform/domain/entities/billing/budget.dart';
+import 'package:ecole_platform/domain/entities/admin/compliance.dart';
+import 'package:ecole_platform/domain/entities/reports/financial_health.dart';
+import 'package:ecole_platform/domain/entities/academic/gradebook.dart';
+import 'package:ecole_platform/domain/entities/school/micro_school.dart';
+import 'package:ecole_platform/domain/entities/lms/question_bank.dart';
+import 'package:ecole_platform/domain/entities/lms/rubric.dart';
+import 'package:ecole_platform/domain/entities/academic/skills.dart';
+import 'package:ecole_platform/domain/entities/sync/sync.dart';
+import 'package:ecole_platform/domain/entities/academic/timetable.dart';
+import 'package:ecole_platform/domain/entities/user/user.dart';
 
 import '../helpers/factories.dart';
 
@@ -214,7 +214,11 @@ void main() {
         ],
         cashflow: [
           CashflowForecast(
-              label: 'Apr', inflow: 20000.0, outflow: 8000.0, net: 12000.0),
+            label: 'Apr',
+            inflow: 20000.0,
+            outflow: 8000.0,
+            net: 12000.0,
+          ),
         ],
       );
 

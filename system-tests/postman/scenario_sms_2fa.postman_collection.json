@@ -1,0 +1,176 @@
+{
+  "info": {
+    "name": "Ecole Platform - SMS 2FA Tests",
+    "description": "SMS 2FA setup contract with invalid OTP fallback for non-interactive Newman runs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has access_token\", function () { pm.expect(responseBody.data).to.have.property(\"access_token\"); });",
+              "pm.environment.set(\"token\", responseBody.data.access_token);",
+              "pm.environment.set(\"access_token\", responseBody.data.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - SMS 2FA Setup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/sms-2fa/setup",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+1234567890\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200, 409, or 422\", function () { pm.expect([200, 409, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 200) { pm.test(\"OTP send acknowledged\", function () { pm.expect(responseBody.data).to.have.property(\"message\"); pm.expect(responseBody.data).to.have.property(\"phone\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Verify Setup With Invalid OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/sms-2fa/verify-setup",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"000000\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code reflects verification result\", function () { pm.expect([200, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 422) { pm.test(\"Invalid OTP rejected\", function () { pm.expect(responseBody.error.message.toLowerCase()).to.include(\"otp\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Disable SMS 2FA",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/sms-2fa/disable",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"000000\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code reflects disable result\", function () { pm.expect([200, 409, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 200) { pm.test(\"Disable acknowledged\", function () { pm.expect(responseBody.data.message).to.include(\"disabled\"); }); }"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

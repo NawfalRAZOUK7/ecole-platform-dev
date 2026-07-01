@@ -1,0 +1,27 @@
+<svg viewBox="0 0 1280 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="École Platform">
+  <defs>
+    <linearGradient id="epl-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="0.55" stop-color="#5b5bef"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="epl-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(24,30) scale(0.586)">
+    <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#epl-bg)"/>
+    <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#epl-sheen)"/>
+    <circle cx="256" cy="248" r="170" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="6"/>
+    <g fill="#ffffff">
+      <path d="M256 150 L402 214 L256 278 L110 214 Z"/>
+      <path d="M222 266 L290 266 L290 292 Q290 322 256 322 Q222 322 222 292 Z"/>
+      <circle cx="256" cy="214" r="12"/>
+    </g>
+    <path d="M402 214 L402 300" stroke="#ffffff" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <circle cx="402" cy="316" r="14" fill="#f59e0b"/>
+  </g>
+  <text x="366" y="212" font-family="Cairo, 'Segoe UI', system-ui, sans-serif" font-weight="700" font-size="150" fill="#1f2937">École</text>
+  <text x="372" y="286" font-family="Cairo, 'Segoe UI', system-ui, sans-serif" font-weight="600" font-size="46" letter-spacing="10" fill="#6b7280">PLATFORM</text>
+</svg>

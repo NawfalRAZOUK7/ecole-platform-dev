@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAccessToken } from '@/services/api/client';
+import { getAccessToken } from '@/core/api/client';
 import { EmptyState } from './EmptyState';
 import { Skeleton } from './Skeleton';
 
@@ -41,7 +41,11 @@ function compareValues(left: unknown, right: unknown) {
   return String(left ?? '').localeCompare(String(right ?? ''));
 }
 
-function getDownloadName(format: ExportFormat, options: DataTableExportOptions, response: Response) {
+function getDownloadName(
+  format: ExportFormat,
+  options: DataTableExportOptions,
+  response: Response,
+) {
   const disposition = response.headers.get('content-disposition');
   const filenameMatch = disposition?.match(/filename="?([^"]+)"?/i);
   if (filenameMatch?.[1]) {
@@ -112,7 +116,9 @@ export function DataTable<T extends Record<string, unknown>>({
     const token = getAccessToken();
     const query = new URLSearchParams({ entity: exportOptions.entity });
     const filters = Object.fromEntries(
-      Object.entries(exportOptions.filters || {}).filter(([, value]) => value !== undefined && value !== '')
+      Object.entries(exportOptions.filters || {}).filter(
+        ([, value]) => value !== undefined && value !== '',
+      ),
     );
     if (Object.keys(filters).length > 0) {
       query.set('filters', JSON.stringify(filters));
@@ -153,13 +159,32 @@ export function DataTable<T extends Record<string, unknown>>({
   return (
     <div>
       {exportOptions ? (
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 12, alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginBottom: 12,
+            alignItems: 'center',
+          }}
+        >
           <div style={{ color: 'var(--color-error)', fontSize: 13 }}>{exportError}</div>
           <details>
             <summary className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
               {exporting ? t('app.loading') : t('exports.title')}
             </summary>
-            <div className="card" style={{ position: 'absolute', marginTop: 8, padding: 8, display: 'grid', gap: 8, minWidth: 160, zIndex: 5 }}>
+            <div
+              className="card"
+              style={{
+                position: 'absolute',
+                marginTop: 8,
+                padding: 8,
+                display: 'grid',
+                gap: 8,
+                minWidth: 160,
+                zIndex: 5,
+              }}
+            >
               {(exportOptions.formats || ['csv', 'xlsx']).map((format) => (
                 <button
                   key={format}
@@ -176,79 +201,84 @@ export function DataTable<T extends Record<string, unknown>>({
         </div>
       ) : null}
       <div className="data-table__scroll">
-      <table className="data-table" role="table" aria-label={ariaLabel || t('app.table', { defaultValue: 'Table' })}>
-        <thead className="data-table__head" role="rowgroup">
-          <tr className="data-table__header-row" role="row">
-            {columns.map((column) => {
-              const isSortable = sortable && column.sortable !== false;
-              const isActive = sortKey === column.key;
-              const ariaSort = !isSortable || !isActive || !sortDirection
-                ? 'none'
-                : sortDirection === 'asc'
-                  ? 'ascending'
-                  : 'descending';
+        <table
+          className="data-table"
+          role="table"
+          aria-label={ariaLabel || t('app.table', { defaultValue: 'Table' })}
+        >
+          <thead className="data-table__head" role="rowgroup">
+            <tr className="data-table__header-row" role="row">
+              {columns.map((column) => {
+                const isSortable = sortable && column.sortable !== false;
+                const isActive = sortKey === column.key;
+                const ariaSort =
+                  !isSortable || !isActive || !sortDirection
+                    ? 'none'
+                    : sortDirection === 'asc'
+                      ? 'ascending'
+                      : 'descending';
 
-              return (
-                <th
-                  key={String(column.key)}
-                  className="data-table__header"
-                  role="columnheader"
-                  aria-sort={ariaSort}
-                  style={{ width: column.width }}
-                  scope="col"
-                >
-                  <button
-                    type="button"
-                    className={`data-table__sort ${isActive ? 'data-table__sort--active' : ''}`}
-                    onClick={() => toggleSort(column)}
-                    disabled={!isSortable}
+                return (
+                  <th
+                    key={String(column.key)}
+                    className="data-table__header"
+                    role="columnheader"
+                    aria-sort={ariaSort}
+                    style={{ width: column.width }}
+                    scope="col"
                   >
-                    <span>{t(column.header)}</span>
-                    {isSortable && (
-                      <span className="data-table__sort-icon" aria-hidden="true">
-                        {isActive && sortDirection === 'desc' ? '↓' : '↑'}
-                      </span>
-                    )}
-                  </button>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody className="data-table__body" role="rowgroup">
-          {loading ? (
-            Array.from({ length: 3 }, (_, index) => (
-              <tr key={`loading-${index}`} className="data-table__row" role="row">
-                <td className="data-table__cell" role="cell" colSpan={columns.length}>
-                  <Skeleton variant="table-row" count={1} />
-                </td>
-              </tr>
-            ))
-          ) : (
-            sortedData.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className={`data-table__row ${onRowClick ? 'data-table__row--clickable' : ''}`}
-                role="row"
-                tabIndex={onRowClick ? 0 : undefined}
-                onClick={() => onRowClick?.(row)}
-                onKeyDown={(event) => {
-                  if (onRowClick && (event.key === 'Enter' || event.key === ' ')) {
-                    event.preventDefault();
-                    onRowClick(row);
-                  }
-                }}
-              >
-                {columns.map((column) => (
-                  <td key={String(column.key)} className="data-table__cell" role="cell">
-                    {column.render ? column.render(row[column.key], row) : String(row[column.key] ?? '-')}
-                  </td>
+                    <button
+                      type="button"
+                      className={`data-table__sort ${isActive ? 'data-table__sort--active' : ''}`}
+                      onClick={() => toggleSort(column)}
+                      disabled={!isSortable}
+                    >
+                      <span>{t(column.header)}</span>
+                      {isSortable && (
+                        <span className="data-table__sort-icon" aria-hidden="true">
+                          {isActive && sortDirection === 'desc' ? '↓' : '↑'}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody className="data-table__body" role="rowgroup">
+            {loading
+              ? Array.from({ length: 3 }, (_, index) => (
+                  <tr key={`loading-${index}`} className="data-table__row" role="row">
+                    <td className="data-table__cell" role="cell" colSpan={columns.length}>
+                      <Skeleton variant="table-row" count={1} />
+                    </td>
+                  </tr>
+                ))
+              : sortedData.map((row, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className={`data-table__row ${onRowClick ? 'data-table__row--clickable' : ''}`}
+                    role="row"
+                    tabIndex={onRowClick ? 0 : undefined}
+                    onClick={() => onRowClick?.(row)}
+                    onKeyDown={(event) => {
+                      if (onRowClick && (event.key === 'Enter' || event.key === ' ')) {
+                        event.preventDefault();
+                        onRowClick(row);
+                      }
+                    }}
+                  >
+                    {columns.map((column) => (
+                      <td key={String(column.key)} className="data-table__cell" role="cell">
+                        {column.render
+                          ? column.render(row[column.key], row)
+                          : String(row[column.key] ?? '-')}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
       </div>
     </div>
   );

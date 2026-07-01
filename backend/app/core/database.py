@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -101,6 +102,36 @@ class SoftDeleteMixin:
 
     def restore(self) -> None:
         self.deleted_at = None
+
+
+class TranslatableMixin:
+    """Mixin providing a single JSONB ``translations`` column for localized copy.
+
+    Shape::
+
+        {"<field>": {"fr": "...", "ar": "...", "en": "..."}}
+
+    Replaces the scattered ``<field>_fr/_ar/_en`` columns with one unified,
+    extensible store (adding a language becomes data, not a migration). Read via
+    :meth:`tr`, which falls back to the default locale then any available value
+    so partially-translated rows still render.
+
+    Rollout is dual-write/dual-read: serializers prefer ``tr(...)`` and fall back
+    to the legacy ``*_fr/_ar/_en`` columns until those are dropped (see
+    ``BACKEND_DB_AUDIT.md`` §2.1, phase D).
+    """
+
+    translations: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    def tr(self, field: str, locale: str, default_locale: str = "fr") -> str | None:
+        data = (self.translations or {}).get(field) or {}
+        if not isinstance(data, dict):
+            return None
+        return (
+            data.get(locale)
+            or data.get(default_locale)
+            or next((v for v in data.values() if v), None)
+        )
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

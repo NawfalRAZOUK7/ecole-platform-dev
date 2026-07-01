@@ -8,8 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/motion.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_entrance.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 
 // ── State ──
 
@@ -98,7 +103,10 @@ class _InvitationsNotifier extends StateNotifier<_InvitationsState> {
 
   Future<void> createInvitation(String roleTarget, int expiresInHours) async {
     state = state.copyWith(
-        creating: true, clearError: true, clearCreatedCode: true);
+      creating: true,
+      clearError: true,
+      clearCreatedCode: true,
+    );
     try {
       final repo = _ref.read(adminRepositoryProvider);
       final invite = await repo.createInvitation(roleTarget, expiresInHours);
@@ -149,16 +157,17 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(_invitationsProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Invitations')),
+      appBar: AppBar(title: Text(t.t('admin.invitations'))),
       floatingActionButton: FloatingActionButton(
         onPressed: () => setState(() => _showForm = !_showForm),
         child: Icon(_showForm ? Icons.close : Icons.add),
       ),
       body: Semantics(
         container: true,
-        label: 'Gestion des invitations',
+        label: t.t('invitations.semanticsLabel'),
         child: Column(
           children: [
             // Filter
@@ -173,8 +182,10 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: FilterChip(
-                        label: Text(_statusLabel(s),
-                            style: const TextStyle(fontSize: 12)),
+                        label: Text(
+                          _statusLabel(s, t),
+                          style: const TextStyle(fontSize: 12),
+                        ),
                         selected: selected,
                         onSelected: (v) => ref
                             .read(_invitationsProvider.notifier)
@@ -197,30 +208,42 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Créer une invitation',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        t.t('invitations.create'),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: _roleTarget,
-                              decoration: const InputDecoration(
-                                labelText: 'Rôle',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                              decoration: InputDecoration(
+                                labelText: t.t('invitations.roleLabel'),
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
-                              items: const [
+                              items: [
                                 DropdownMenuItem(
-                                    value: 'STD', child: Text('Élève')),
+                                  value: 'STD',
+                                  child: Text(t.t('roles.STD')),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'PAR', child: Text('Parent')),
+                                  value: 'PAR',
+                                  child: Text(t.t('roles.PAR')),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'TCH', child: Text('Enseignant')),
+                                  value: 'TCH',
+                                  child: Text(t.t('roles.TCH')),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'DIR', child: Text('Directeur')),
+                                  value: 'DIR',
+                                  child: Text(t.t('roles.DIR')),
+                                ),
                               ],
                               onChanged: (v) {
                                 if (v != null) setState(() => _roleTarget = v);
@@ -231,18 +254,31 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: _expiresInHours,
-                              decoration: const InputDecoration(
-                                labelText: 'Expiration',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                              decoration: InputDecoration(
+                                labelText: t.t('invitations.expirationLabel'),
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
-                              items: const [
-                                DropdownMenuItem(value: 24, child: Text('24h')),
-                                DropdownMenuItem(value: 48, child: Text('48h')),
-                                DropdownMenuItem(value: 72, child: Text('72h')),
+                              items: [
+                                const DropdownMenuItem(
+                                  value: 24,
+                                  child: Text('24h'),
+                                ),
+                                const DropdownMenuItem(
+                                  value: 48,
+                                  child: Text('48h'),
+                                ),
+                                const DropdownMenuItem(
+                                  value: 72,
+                                  child: Text('72h'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 168, child: Text('7 jours')),
+                                  value: 168,
+                                  child: Text(t.t('invitations.sevenDays')),
+                                ),
                               ],
                               onChanged: (v) {
                                 if (v != null) {
@@ -269,7 +305,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                                   color: theme.colorScheme.onPrimary,
                                 ),
                               )
-                            : const Text('Générer'),
+                            : Text(t.t('invitations.generate')),
                       ),
                       if (state.createdCode != null) ...[
                         const SizedBox(height: 12),
@@ -296,9 +332,11 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                                 icon: const Icon(Icons.copy, size: 18),
                                 onPressed: () {
                                   Clipboard.setData(
-                                      ClipboardData(text: state.createdCode!));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Code copié')),
+                                    ClipboardData(text: state.createdCode!),
+                                  );
+                                  AppSnackBar.success(
+                                    context,
+                                    t.t('invitations.codeCopied'),
                                   );
                                 },
                               ),
@@ -323,9 +361,10 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                     color: theme.colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(state.error!,
-                      style:
-                          TextStyle(color: theme.colorScheme.onErrorContainer)),
+                  child: Text(
+                    state.error!,
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                  ),
                 ),
               ),
 
@@ -337,20 +376,28 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
     );
   }
 
-  Widget _buildList(BuildContext context, WidgetRef ref,
-      _InvitationsState state, ThemeData theme) {
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    _InvitationsState state,
+    ThemeData theme,
+  ) {
+    final t = AppLocalizations.of(ref);
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.items.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.mail_outline,
-                size: 48, color: theme.colorScheme.outline),
-            SizedBox(height: 16),
-            Text('Aucune invitation'),
+            Icon(
+              Icons.mail_outline,
+              size: 48,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            Text(t.t('invitations.empty')),
           ],
         ),
       );
@@ -365,23 +412,29 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
           final inv = state.items[index];
           final isRevoking = state.revoking.contains(inv.id);
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
+          return AnimatedEntrance(
+            delay: AnimatedEntrance.stagger(index),
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: _statusColor(theme, inv.status).withAlpha(30),
                 child: Icon(Icons.mail, color: _statusColor(theme, inv.status)),
               ),
               title: Row(
                 children: [
-                  Text(inv.roleTarget,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    inv.roleTarget,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(width: 8),
                   _InvStatusBadge(status: inv.status),
                 ],
               ),
               subtitle: Text(
-                'Expire: ${_formatDate(inv.expiresAt)}',
+                t
+                    .t('invitations.expiresAt')
+                    .replaceAll('{date}', _formatDate(inv.expiresAt)),
                 style: theme.textTheme.bodySmall,
               ),
               trailing: inv.status == 'active'
@@ -389,34 +442,31 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : IconButton(
-                          icon: Icon(Icons.cancel_outlined,
-                              color: theme.colorScheme.error),
+                          icon: Icon(
+                            Icons.cancel_outlined,
+                            color: theme.colorScheme.error,
+                          ),
                           onPressed: () => ref
                               .read(_invitationsProvider.notifier)
                               .revoke(inv.id),
-                          tooltip: 'Révoquer',
+                          tooltip: t.t('invitations.revoke'),
                         )
                   : null,
             ),
-          );
+          ),
+        );
         },
       ),
     );
   }
 
-  String _statusLabel(String s) {
-    switch (s) {
-      case 'active':
-        return 'Actives';
-      case 'consumed':
-        return 'Utilisées';
-      case 'expired':
-        return 'Expirées';
-      default:
-        return s;
-    }
+  String _statusLabel(String s, AppLocalizations t) {
+    // Enum code [s] stays the logic identifier; display is externalized.
+    final label = t.t('invitations.filterStatus.$s');
+    return label == 'invitations.filterStatus.$s' ? s : label;
   }
 
   Color _statusColor(ThemeData theme, String s) {
@@ -442,38 +492,47 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
   }
 }
 
-class _InvStatusBadge extends StatelessWidget {
+class _InvStatusBadge extends ConsumerWidget {
   final String status;
 
   const _InvStatusBadge({required this.status});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     Color color;
-    String label;
     switch (status) {
       case 'active':
         color = theme.semanticPalette.success;
-        label = 'Active';
         break;
       case 'consumed':
         color = theme.colorScheme.primary;
-        label = 'Utilisée';
         break;
       default:
         color = theme.colorScheme.outline;
-        label = 'Expirée';
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(label,
+    final label = t.t('invitations.badge.$status');
+    return AnimatedSwitcher(
+      duration: AppMotion.standard,
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: Container(
+        key: ValueKey<String>(status),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          border: Border.all(color: color),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
           style: TextStyle(
-              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+            fontSize: 10,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 }

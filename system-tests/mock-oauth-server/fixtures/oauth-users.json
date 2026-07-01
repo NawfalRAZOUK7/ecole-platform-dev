@@ -1,0 +1,20 @@
+{
+  "google": {
+    "sub": "1234567890",
+    "email": "mock.google@example.com",
+    "name": "Mock Google User",
+    "given_name": "Mock",
+    "family_name": "Google User",
+    "picture": "https://example.com/avatar-google.png"
+  },
+  "microsoft": {
+    "sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "email": "mock.microsoft@example.com",
+    "name": "Mock Microsoft User"
+  },
+  "apple": {
+    "sub": "001234.abcd1234efgh5678ijkl9012mno3",
+    "email": "mock.apple@example.com",
+    "name": "Mock Apple User"
+  }
+}

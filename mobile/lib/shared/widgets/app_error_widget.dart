@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 
-class AppErrorWidget extends StatelessWidget {
+class AppErrorWidget extends ConsumerWidget {
   final String message;
   final VoidCallback? onRetry;
 
@@ -13,8 +15,9 @@ class AppErrorWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Semantics(
       container: true,
@@ -42,7 +45,7 @@ class AppErrorWidget extends StatelessWidget {
                 FilledButton.tonalIcon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+                  label: Text(t.t('common.retry')),
                 ),
               ],
             ],

@@ -11,11 +11,11 @@ from pydantic import ValidationError as PydanticValidationError
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.men_compliance import (
+from app.schemas.admin.men_compliance import (
     CurriculumMappingCreateRequest,
     MenCurriculumCreateRequest,
 )
-from app.services.compliance_service import ComplianceService
+from app.services.admin.compliance import ComplianceService
 
 
 @pytest_asyncio.fixture(autouse=True)

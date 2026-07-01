@@ -20,7 +20,7 @@ from app.schemas.lms import (
     ActivitySessionCreateRequest,
     CourseCreateRequest,
 )
-from app.services.audit import AuditService
+from app.services.platform.audit import AuditService
 from app.services.lms._helpers import LMSServiceBase
 
 

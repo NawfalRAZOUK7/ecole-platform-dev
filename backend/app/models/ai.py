@@ -36,7 +36,7 @@ class WritingAttempt(TimestampMixin, SchoolScopedMixin, Base):
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    subject: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    topic: Mapped[str | None] = mapped_column(String(200), nullable=True)
     input_text: Mapped[str] = mapped_column(Text, nullable=False)
     input_word_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="completed")

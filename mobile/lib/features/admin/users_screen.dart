@@ -8,9 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/motion.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_entrance.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
 // ── State ──
@@ -157,7 +161,8 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
       state = state.copyWith(error: e.toString());
     } finally {
       state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(userId));
+        actionLoading: {...state.actionLoading}..remove(userId),
+      );
     }
   }
 
@@ -171,7 +176,8 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
       state = state.copyWith(error: e.toString());
     } finally {
       state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(userId));
+        actionLoading: {...state.actionLoading}..remove(userId),
+      );
     }
   }
 
@@ -185,7 +191,8 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
       state = state.copyWith(error: e.toString());
     } finally {
       state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(userId));
+        actionLoading: {...state.actionLoading}..remove(userId),
+      );
     }
   }
 
@@ -207,38 +214,56 @@ class UsersScreen extends ConsumerWidget {
     final state = ref.watch(_usersProvider);
     final currentUserId = ref.watch(authProvider).user?.id;
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Utilisateurs')),
+      appBar: AppBar(title: Text(t.t('shell.users'))),
       body: Column(
         children: [
           SearchFilterBar(
-            searchHint: 'Rechercher un utilisateur...',
+            searchHint: t.t('users.searchHint'),
             searchValue: state.search,
             onSearchChanged: (v) =>
                 ref.read(_usersProvider.notifier).setSearch(v),
-            filters: {
-              'Rôle': const [
-                FilterOption(label: 'Tous', value: null),
-                FilterOption(label: 'Admin', value: 'ADM'),
-                FilterOption(label: 'Directeur', value: 'DIR'),
-                FilterOption(label: 'Enseignant', value: 'TCH'),
-                FilterOption(label: 'Parent', value: 'PAR'),
-                FilterOption(label: 'Élève', value: 'STD'),
-              ],
-              'Statut': const [
-                FilterOption(label: 'Tous', value: null),
-                FilterOption(label: 'Actif', value: 'active'),
-                FilterOption(label: 'Suspendu', value: 'suspended'),
-                FilterOption(label: 'Inactif', value: 'inactive'),
-              ],
-            },
+            filters: [
+              FilterGroup(
+                id: 'role',
+                label: t.t('users.filter.role'),
+                options: [
+                  FilterOption(label: t.t('common.all'), value: null),
+                  FilterOption(label: t.t('roles.ADM'), value: 'ADM'),
+                  FilterOption(label: t.t('roles.DIR'), value: 'DIR'),
+                  FilterOption(label: t.t('roles.TCH'), value: 'TCH'),
+                  FilterOption(label: t.t('roles.PAR'), value: 'PAR'),
+                  FilterOption(label: t.t('roles.STD'), value: 'STD'),
+                ],
+              ),
+              FilterGroup(
+                id: 'status',
+                label: t.t('users.filter.status'),
+                options: [
+                  FilterOption(label: t.t('common.all'), value: null),
+                  FilterOption(
+                    label: t.t('users.status.active'),
+                    value: 'active',
+                  ),
+                  FilterOption(
+                    label: t.t('users.status.suspended'),
+                    value: 'suspended',
+                  ),
+                  FilterOption(
+                    label: t.t('users.status.inactive'),
+                    value: 'inactive',
+                  ),
+                ],
+              ),
+            ],
             filterValues: {
-              'Rôle': state.roleFilter,
-              'Statut': state.statusFilter,
+              'role': state.roleFilter,
+              'status': state.statusFilter,
             },
-            onFilterChanged: (key, value) {
-              if (key == 'Rôle') {
+            onFilterChanged: (id, value) {
+              if (id == 'role') {
                 ref.read(_usersProvider.notifier).setRoleFilter(value);
               } else {
                 ref.read(_usersProvider.notifier).setStatusFilter(value);
@@ -246,16 +271,23 @@ class UsersScreen extends ConsumerWidget {
             },
           ),
           Expanded(
-              child: _buildList(context, ref, state, theme, currentUserId)),
+            child: _buildList(context, ref, state, theme, currentUserId),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildList(BuildContext context, WidgetRef ref, _UsersState state,
-      ThemeData theme, String? currentUserId) {
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    _UsersState state,
+    ThemeData theme,
+    String? currentUserId,
+  ) {
+    final t = AppLocalizations.of(ref);
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.error != null && state.items.isEmpty) {
       return Center(
@@ -268,7 +300,7 @@ class UsersScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(_usersProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -279,10 +311,13 @@ class UsersScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline,
-                size: 48, color: theme.colorScheme.outline),
-            SizedBox(height: 16),
-            Text('Aucun utilisateur trouvé'),
+            Icon(
+              Icons.people_outline,
+              size: 48,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            Text(t.t('users.empty')),
           ],
         ),
       );
@@ -303,7 +338,7 @@ class UsersScreen extends ConsumerWidget {
                     : TextButton(
                         onPressed: () =>
                             ref.read(_usersProvider.notifier).loadMore(),
-                        child: const Text('Charger plus'),
+                        child: Text(t.t('common.loadMore')),
                       ),
               ),
             );
@@ -313,9 +348,11 @@ class UsersScreen extends ConsumerWidget {
           final isSelf = user.id == currentUserId;
           final isActionLoading = state.actionLoading.contains(user.id);
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: Padding(
+          return AnimatedEntrance(
+            delay: AnimatedEntrance.stagger(index),
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,28 +380,38 @@ class UsersScreen extends ConsumerWidget {
                             Row(
                               children: [
                                 Flexible(
-                                  child: Text(user.fullName,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600),
-                                      overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    user.fullName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 if (user.emailVerified) ...[
                                   const SizedBox(width: 4),
-                                  Icon(Icons.verified,
-                                      size: 14,
-                                      color: theme.colorScheme.primary),
+                                  Icon(
+                                    Icons.verified,
+                                    size: 14,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ],
                                 if (user.totpEnabled) ...[
                                   const SizedBox(width: 4),
-                                  Icon(Icons.lock,
-                                      size: 14,
-                                      color: theme.semanticPalette.warning),
+                                  Icon(
+                                    Icons.lock,
+                                    size: 14,
+                                    color: theme.semanticPalette.warning,
+                                  ),
                                 ],
                               ],
                             ),
-                            Text(user.email,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant)),
+                            Text(
+                              user.email,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -380,17 +427,27 @@ class UsersScreen extends ConsumerWidget {
                           value: user.role,
                           isDense: true,
                           underline: const SizedBox.shrink(),
-                          items: const [
+                          items: [
                             DropdownMenuItem(
-                                value: 'ADM', child: Text('Admin')),
+                              value: 'ADM',
+                              child: Text(t.t('roles.ADM')),
+                            ),
                             DropdownMenuItem(
-                                value: 'DIR', child: Text('Directeur')),
+                              value: 'DIR',
+                              child: Text(t.t('roles.DIR')),
+                            ),
                             DropdownMenuItem(
-                                value: 'TCH', child: Text('Enseignant')),
+                              value: 'TCH',
+                              child: Text(t.t('roles.TCH')),
+                            ),
                             DropdownMenuItem(
-                                value: 'PAR', child: Text('Parent')),
+                              value: 'PAR',
+                              child: Text(t.t('roles.PAR')),
+                            ),
                             DropdownMenuItem(
-                                value: 'STD', child: Text('Élève')),
+                              value: 'STD',
+                              child: Text(t.t('roles.STD')),
+                            ),
                           ],
                           onChanged: isActionLoading
                               ? null
@@ -414,22 +471,24 @@ class UsersScreen extends ConsumerWidget {
                             onPressed: () => ref
                                 .read(_usersProvider.notifier)
                                 .suspendUser(user.id),
-                            child: Text('Suspendre',
-                                style:
-                                    TextStyle(color: theme.colorScheme.error)),
+                            child: Text(
+                              t.t('users.suspend'),
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
                           )
                         else
                           TextButton(
                             onPressed: () => ref
                                 .read(_usersProvider.notifier)
                                 .activateUser(user.id),
-                            child: const Text('Activer'),
+                            child: Text(t.t('users.activate')),
                           ),
                       ],
                     ),
                   ],
                 ],
               ),
+            ),
             ),
           );
         },
@@ -438,38 +497,47 @@ class UsersScreen extends ConsumerWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
+class _StatusBadge extends ConsumerWidget {
   final String status;
 
   const _StatusBadge({required this.status});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     Color color;
-    String label;
     switch (status) {
       case 'active':
         color = theme.semanticPalette.success;
-        label = 'Actif';
         break;
       case 'suspended':
         color = theme.colorScheme.error;
-        label = 'Suspendu';
         break;
       default:
         color = theme.colorScheme.outline;
-        label = 'Inactif';
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(label,
+    final label = t.t('users.status.$status');
+    return AnimatedSwitcher(
+      duration: AppMotion.standard,
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: Container(
+        key: ValueKey<String>(status),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          border: Border.all(color: color),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
           style: TextStyle(
-              fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -28,7 +28,7 @@ import pytest
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.core.downloads import AS_QUERY, PresignableBackend, build_download_response
-from app.schemas.storage import DownloadMetadata
+from app.schemas.content.storage import DownloadMetadata
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.services.difficulty_adapter import DifficultyAdapter
+from app.services.lms.difficulty_adapter import DifficultyAdapter
 
 
 def _make_attempt(score: float, max_score: float, difficulty: str) -> MagicMock:

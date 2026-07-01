@@ -49,7 +49,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       appBar: AppBar(title: Text(t.t('auth.forgotPassword'))),
       body: Semantics(
         container: true,
-        label: 'Réinitialisation du mot de passe',
+        label: t.t('auth.forgotPassword'),
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
@@ -61,9 +61,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: t.t('auth.email'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -76,7 +76,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.email_outlined),
-              label: const Text('Send reset link'),
+              label: Text(t.t('auth.sendResetLink')),
             ),
           ],
         ),

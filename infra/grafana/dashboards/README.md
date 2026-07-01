@@ -2,10 +2,13 @@
 
 Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is automatically loaded via provisioning and provides specific insights into platform health, performance, and business metrics.
 
+Dashboard tags and panel labels should use backend bounded contexts when a metric is domain-specific: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
+
 ## Available Dashboards
 
 ### api-overview.json
 **Purpose** - API request metrics and performance
+**Contexts** - all API domains, grouped by route or explicit domain labels where available
 
 **Metrics Monitored**
 - Request rate (req/sec by endpoint)
@@ -21,6 +24,7 @@ Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is auto
 
 ### auth-sessions.json
 **Purpose** - Authentication and user session monitoring
+**Contexts** - `auth`, `user`
 
 **Metrics Monitored**
 - Active user sessions
@@ -37,6 +41,7 @@ Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is auto
 
 ### business-education.json
 **Purpose** - Educational business metrics and Moroccan grading analytics
+**Contexts** - `school`, `academic`, `lms`, `reports`
 
 **Metrics Monitored**
 - Student progress and completion rates
@@ -54,6 +59,7 @@ Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is auto
 
 ### billing-providers.json
 **Purpose** - Payment processing and subscription metrics
+**Contexts** - `billing`, `reports`
 
 **Metrics Monitored**
 - Payment transactions (success/failure)
@@ -71,6 +77,7 @@ Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is auto
 
 ### db-redis-health.json
 **Purpose** - Database and cache infrastructure health
+**Contexts** - `operations`
 
 **Metrics Monitored**
 - PostgreSQL connection count and pool utilization
@@ -88,6 +95,7 @@ Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is auto
 
 ### storage-minio.json
 **Purpose** - MinIO/S3-backed object storage operations
+**Contexts** - `content`, `reports`, `operations`
 
 **Metrics Monitored**
 - Upload count and uploaded bytes by backend and MIME type
@@ -123,6 +131,7 @@ Dashboards use:
 ## Best Practices
 
 - Use meaningful panel titles and descriptions
+- Tag domain-specific panels with the bounded context name
 - Set appropriate alert thresholds
 - Include units and formatting
 - Use consistent color schemes

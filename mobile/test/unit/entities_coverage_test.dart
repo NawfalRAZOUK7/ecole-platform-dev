@@ -1,17 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecole_platform/domain/entities/attendance.dart';
-import 'package:ecole_platform/domain/entities/budget.dart';
-import 'package:ecole_platform/domain/entities/compliance.dart';
-import 'package:ecole_platform/domain/entities/conversation.dart';
-import 'package:ecole_platform/domain/entities/financial_health.dart';
-import 'package:ecole_platform/domain/entities/gradebook.dart';
-import 'package:ecole_platform/domain/entities/micro_school.dart';
-import 'package:ecole_platform/domain/entities/notification_settings.dart';
-import 'package:ecole_platform/domain/entities/reporting.dart';
-import 'package:ecole_platform/domain/entities/skills.dart';
-import 'package:ecole_platform/domain/entities/sync.dart';
-import 'package:ecole_platform/domain/entities/timetable.dart';
+import 'package:ecole_platform/domain/entities/academic/attendance.dart';
+import 'package:ecole_platform/domain/entities/billing/budget.dart';
+import 'package:ecole_platform/domain/entities/admin/compliance.dart';
+import 'package:ecole_platform/domain/entities/communication/conversation.dart';
+import 'package:ecole_platform/domain/entities/reports/financial_health.dart';
+import 'package:ecole_platform/domain/entities/academic/gradebook.dart';
+import 'package:ecole_platform/domain/entities/school/micro_school.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_settings.dart';
+import 'package:ecole_platform/domain/entities/reports/reporting.dart';
+import 'package:ecole_platform/domain/entities/academic/skills.dart';
+import 'package:ecole_platform/domain/entities/sync/sync.dart';
+import 'package:ecole_platform/domain/entities/academic/timetable.dart';
 
 import '../helpers/factories.dart';
 
@@ -751,7 +751,9 @@ void main() {
       expect(summary.averages.single.avg, 17.5);
       expect(detail.assessments.single.maxScore, 20.0);
       expect(
-          transcript.periods.single.subjects.single.grades.single.score, 18.0);
+        transcript.periods.single.subjects.single.grades.single.score,
+        18.0,
+      );
       expect(device.platform, 'ios');
     });
   });

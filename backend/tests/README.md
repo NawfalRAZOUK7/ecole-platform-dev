@@ -24,8 +24,14 @@ Comprehensive test suite for the École Platform backend. Organized by domain an
 
 ```
 tests/
-├── conftest.py                          # Shared fixtures
-├── _support/                            # Test helpers (factories, fixtures, builders, matchers)
+├── conftest.py                          # Root fixtures (db_session, tokens, auth ctx) + pytest_plugins
+├── factories/                           # factory_boy factories per domain (iam, erp, lms, …)
+├── utils/                               # Test helpers (e.g. testmail)
+├── _support/                            # Shared test-support package (see _support/README.md)
+│   ├── builders/                        #   fluent builders (AuthContextBuilder, SchoolApplicationBuilder)
+│   ├── factories/                       #   factory import surface + onboarding factories
+│   ├── fixtures/                        #   reusable pytest fixtures (auto-registered)
+│   └── matchers/                        #   assertion helpers (uuid, envelopes, activation URL)
 │
 ├── unit/                                # Fast, mocked, no DB
 │   ├── core/                            # JWT, permissions, rate limit, middleware, etc.
@@ -45,15 +51,18 @@ tests/
 │
 ├── integration/                         # Real DB via testcontainers
 │   ├── api/                             # API endpoint tests grouped by domain
-│   │   ├── iam/                         # Auth, profiles, family, websocket, filters
+│   │   ├── auth/                        # Auth flows, RBAC, background auth tasks
+│   │   ├── user/                        # Profiles, family relationships
 │   │   ├── lms/                         # Content, uploads, story, levels, difficulty
 │   │   ├── communication/               # Notifications, announcements, shared review
-│   │   ├── billing/                     # Invoices, payments, budgets, financial health
-│   │   ├── academic/                    # Programs, attendance, gradebook, skills
-│   │   ├── content/                     # Games, rewards
-│   │   ├── storage/                     # Signed uploads/downloads, ClamAV
-│   │   ├── micro_school/                # Micro-school operations
-│   │   ├── operations/                  # Calendar, documents, reports, readiness
+│   │   ├── billing/                     # Invoices, payments, budgets
+│   │   ├── reports/                     # Financial health, attendance analytics, reports analytics
+│   │   ├── academic/                    # Programs, attendance, gradebook, timetable, skills
+│   │   ├── content/                     # Documents, signed uploads/downloads
+│   │   ├── school/                      # Schools + micro-school HTTP tests
+│   │   ├── ai/                          # Rewards and games HTTP tests
+│   │   ├── admin/                       # Compliance and calendar event HTTP tests
+│   │   ├── operations/                  # Readiness, filters, websocket
 │   │   └── sync/                        # Data sync endpoints
 │   └── repositories/                    # Repository integration tests (was db/)
 │
@@ -76,7 +85,7 @@ pytest
 
 # By category
 pytest tests/unit/ -m unit
-pytest tests/integration/api/iam/ -m integration
+pytest tests/integration/api/auth/ -m integration
 pytest tests/security/ -m security
 pytest tests/edge/
 pytest tests/performance/ -m performance

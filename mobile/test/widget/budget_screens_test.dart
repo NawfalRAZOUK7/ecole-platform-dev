@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/budget.dart';
-import 'package:ecole_platform/features/budgets/budget_detail_screen.dart';
-import 'package:ecole_platform/features/budgets/budget_list_screen.dart';
-import 'package:ecole_platform/features/budgets/budget_request_screen.dart';
+import 'package:ecole_platform/domain/entities/billing/budget.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_detail_screen.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_list_screen.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_request_screen.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/mock_repositories.dart';
@@ -172,12 +172,18 @@ void main() {
       );
       when(() => budgetRepository.createBudgetRequest(any()))
           .thenAnswer((_) async => _request);
-      when(() => budgetRepository.approveBudgetRequest(any(),
-              reviewComment: any(named: 'reviewComment')))
-          .thenAnswer((_) async => _request);
-      when(() => budgetRepository.rejectBudgetRequest(any(),
-              reviewComment: any(named: 'reviewComment')))
-          .thenAnswer((_) async => _request);
+      when(
+        () => budgetRepository.approveBudgetRequest(
+          any(),
+          reviewComment: any(named: 'reviewComment'),
+        ),
+      ).thenAnswer((_) async => _request);
+      when(
+        () => budgetRepository.rejectBudgetRequest(
+          any(),
+          reviewComment: any(named: 'reviewComment'),
+        ),
+      ).thenAnswer((_) async => _request);
 
       await pumpApp(
         tester,
@@ -190,8 +196,8 @@ void main() {
 
       expect(find.text('Approval queue'), findsOneWidget);
       expect(find.text('Lab kits'), findsOneWidget);
-      expect(find.text('Approve'), findsOneWidget);
-      expect(find.text('Reject'), findsOneWidget);
+      expect(find.text('Approuver'), findsOneWidget);
+      expect(find.text('Rejeter'), findsOneWidget);
     });
 
     testWidgets('BudgetRequestScreen submits new requests', (tester) async {
@@ -206,12 +212,18 @@ void main() {
       when(() => budgetRepository.createBudgetRequest(any())).thenAnswer(
         (_) async => _request,
       );
-      when(() => budgetRepository.approveBudgetRequest(any(),
-              reviewComment: any(named: 'reviewComment')))
-          .thenAnswer((_) async => _request);
-      when(() => budgetRepository.rejectBudgetRequest(any(),
-              reviewComment: any(named: 'reviewComment')))
-          .thenAnswer((_) async => _request);
+      when(
+        () => budgetRepository.approveBudgetRequest(
+          any(),
+          reviewComment: any(named: 'reviewComment'),
+        ),
+      ).thenAnswer((_) async => _request);
+      when(
+        () => budgetRepository.rejectBudgetRequest(
+          any(),
+          reviewComment: any(named: 'reviewComment'),
+        ),
+      ).thenAnswer((_) async => _request);
 
       await pumpApp(
         tester,
@@ -225,7 +237,9 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), '250');
       await tester.enterText(find.byType(TextFormField).at(1), 'Printer paper');
       await tester.enterText(
-          find.byType(TextFormField).at(2), 'Needed for exams');
+        find.byType(TextFormField).at(2),
+        'Needed for exams',
+      );
       await tester.tap(find.byIcon(Icons.send_outlined));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));

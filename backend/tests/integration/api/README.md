@@ -2,9 +2,31 @@
 
 HTTP endpoint contract testing with real database. Tests validate request/response formats, error handling, and business logic enforcement at API layer.
 
-## Test Files
+## Layout
 
-### test_schools_api.py - School Management Endpoints
+Tests mirror `app/api/v1/` domains. Each subfolder is a Python package (`__init__.py`); shared fixtures live in `conftest.py` and `helpers.py` at this level.
+
+| Folder | Examples |
+|--------|----------|
+| `school/` | `test_schools_api.py`, `test_micro_school_api.py` |
+| `billing/` | `test_billing_api.py`, `test_budgets_api.py`, invoice/receipt PDFs |
+| `reports/` | `test_financial_health_api.py`, `test_attendance_analytics_api.py`, reports analytics |
+| `academic/` | `test_gradebook_api.py`, `test_attendance_api.py`, `test_timetable_api.py`, programs |
+| `lms/` | `test_rubrics_api.py`, content, uploads |
+| `ai/` | rewards and games |
+| `auth/` | auth flows, RBAC, background auth tasks |
+| `user/` | profiles and family relationships |
+| `admin/` | compliance and calendar events |
+| `communication/` | notifications, announcements, shared review |
+| `content/` | documents and direct uploads |
+| `sync/` | `test_sync_api.py` |
+| `operations/` | readiness plus cross-domain filters and websocket checks |
+
+Imports from shared helpers: `from tests.integration.api.helpers import ...`.
+
+## Test Files (selected)
+
+### school/test_schools_api.py - School Management Endpoints
 CRUD operations for schools and organizational units.
 
 **Endpoints Tested:**
@@ -23,7 +45,7 @@ CRUD operations for schools and organizational units.
 - Soft delete handling (archive vs. permanent)
 - Relationship loading (eager vs. lazy)
 
-### test_billing_api.py - Billing Operations
+### billing/test_billing_api.py - Billing Operations
 Invoice and payment processing endpoints.
 
 **Endpoints Tested:**
@@ -42,7 +64,7 @@ Invoice and payment processing endpoints.
 - Partial payment handling
 - Invoice PDF generation
 
-### test_gradebook_api.py - Grade Management
+### academic/test_gradebook_api.py - Grade Management
 Grade entry, publication, and archival.
 
 **Endpoints Tested:**
@@ -62,7 +84,7 @@ Grade entry, publication, and archival.
 - Student notification on publication
 - Teacher override with reason logging
 
-### test_rubrics_api.py - Rubric-Based Grading
+### lms/test_rubrics_api.py - Rubric-Based Grading
 Rubric creation and rubric-based scoring.
 
 **Endpoints Tested:**
@@ -80,7 +102,7 @@ Rubric creation and rubric-based scoring.
 - Rubric reuse across assignments
 - Export to PDF
 
-### test_attendance_analytics_api.py - Attendance Analytics
+### reports/test_attendance_analytics_api.py - Attendance Analytics
 Attendance data aggregation and reporting.
 
 **Endpoints Tested:**
@@ -99,7 +121,7 @@ Attendance data aggregation and reporting.
 - Date range filtering
 - Student/class/school aggregation levels
 
-### test_timetable_api.py - Schedule Management
+### academic/test_timetable_api.py - Schedule Management
 Timetable/schedule creation and conflict detection.
 
 **Endpoints Tested:**
@@ -192,9 +214,9 @@ async def test_moroccan_phone_format():
 # All API tests
 pytest backend/tests/integration/api/
 
-# By endpoint
-pytest backend/tests/integration/api/test_schools_api.py
-pytest backend/tests/integration/api/test_billing_api.py -v
+# By domain / file
+pytest backend/tests/integration/api/school/test_schools_api.py
+pytest backend/tests/integration/api/billing/test_billing_api.py -v
 
 # By keyword
 pytest backend/tests/integration/api/ -k "authorization" -v

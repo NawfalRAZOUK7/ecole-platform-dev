@@ -1,22 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/rewards.dart';
-import 'package:ecole_platform/domain/repositories/rewards_repository.dart';
-import 'package:ecole_platform/features/games/mini_games_screen.dart';
+import 'package:ecole_platform/domain/entities/ai/rewards.dart';
+import 'package:ecole_platform/domain/repositories/ai/rewards_repository.dart';
+import 'package:ecole_platform/features/ai/games/mini_games_screen.dart';
 
-import '../helpers/mock_repositories.dart';
 import '../helpers/pump_app.dart';
 import '../helpers/test_mocks.dart';
 
 class MockRewardsRepository extends Mock implements RewardsRepository {}
-
-Future<void> _settle(WidgetTester tester) async {
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 300));
-}
 
 void main() {
   group('Games screens', () {

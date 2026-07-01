@@ -8,13 +8,13 @@ import pytest
 import pytest_asyncio
 from pydantic import ValidationError as PydanticValidationError
 
-from app.schemas.micro_school import (
+from app.schemas.school.micro_school import (
     MicroGroupCreateRequest,
     MicroPaymentCreateRequest,
     MicroProgressLogCreateRequest,
     MicroSchoolCreateRequest,
 )
-from app.services.micro_school_service import MicroPaymentService
+from app.services.school.micro_school_service import MicroPaymentService
 
 
 @pytest_asyncio.fixture(autouse=True)

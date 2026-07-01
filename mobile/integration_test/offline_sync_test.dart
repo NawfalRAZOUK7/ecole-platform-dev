@@ -4,9 +4,9 @@ import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/domain/entities/sync.dart';
-import 'package:ecole_platform/shared/connectivity_service.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/domain/entities/sync/sync.dart';
+import 'package:ecole_platform/core/network/connectivity.dart';
 
 import 'helpers/fake_app_environment.dart';
 import '../test/helpers/api_responses.dart';
@@ -61,14 +61,14 @@ void main() {
       await environment.cacheStore.put(
         'feed:first',
         const [
-          {'id': 'feed-1'}
+          {'id': 'feed-1'},
         ],
         60,
       );
       await environment.cacheStore.put(
         'notifications:first',
         const [
-          {'id': 'notification-1'}
+          {'id': 'notification-1'},
         ],
         60,
       );

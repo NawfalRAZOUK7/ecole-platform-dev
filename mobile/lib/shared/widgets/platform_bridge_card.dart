@@ -5,8 +5,8 @@
 /// Usage:
 ///   PlatformBridgeCard(
 ///     targetPlatform: TargetPlatform.web,
-///     title: 'إنشاء المحتوى',
-///     description: 'لإنشاء الاختبارات وتعديل المحتوى، استخدم المنصة على الحاسوب.',
+///     title: 'Création de contenu',
+///     description: 'Pour créer des quiz et modifier le contenu, utilisez le web.',
 ///     icon: Icons.computer,
 ///   )
 
@@ -30,7 +30,7 @@ class PlatformBridgeCard extends StatelessWidget {
     required this.title,
     required this.description,
     this.icon,
-    this.textDirection = TextDirection.rtl,
+    this.textDirection = TextDirection.ltr,
   });
 
   @override
@@ -38,15 +38,15 @@ class PlatformBridgeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isWeb = targetPlatform == BridgePlatform.web;
 
-    final Color accentColor =
-        isWeb ? AppColors.primary : AppColors.secondary;
+    final Color accentColor = isWeb ? AppColors.primary : AppColors.secondary;
     final Color bgColor = accentColor.withAlpha(15);
     final Color borderColor = accentColor.withAlpha(60);
     final IconData platformIcon =
         icon ?? (isWeb ? Icons.computer_rounded : Icons.phone_android_rounded);
+    final isRtl = textDirection == TextDirection.rtl;
     final String platformLabel = isWeb
-        ? 'متوفر على الويب'
-        : 'متوفر على التطبيق';
+        ? (isRtl ? 'متوفر على الويب' : 'Disponible sur le web')
+        : (isRtl ? 'متوفر على التطبيق' : 'Disponible sur mobile');
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),

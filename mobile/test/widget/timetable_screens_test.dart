@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/features/timetable/timetable_screen.dart';
+import 'package:ecole_platform/features/academic/timetable/timetable_screen.dart';
 
 import '../helpers/api_responses.dart';
 import '../helpers/pump_app.dart';

@@ -4,7 +4,7 @@ import { server } from '../utils/mocks';
 
 describe('API Client', () => {
   it('should be importable', async () => {
-    const mod = await import('@/services/api/client');
+    const mod = await import('@/core/api/client');
 
     expect(mod.api).toBeDefined();
   });
@@ -27,7 +27,7 @@ describe('API Client', () => {
       }),
     );
 
-    const { getDownloadUrl } = await import('@/services/api/client');
+    const { getDownloadUrl } = await import('@/core/api/client');
     const metadata = await getDownloadUrl(
       '/api/v1/content-items/content-1/stream?disposition=inline',
     );

@@ -11,7 +11,7 @@ from datetime import date, datetime, timezone
 import pytest
 
 from app.models.calendar import Event, EventType, EventVisibility
-from app.repositories.calendar import CalendarRepository
+from app.repositories.communication_calendar import CalendarRepository
 from tests.factories.iam import UserFactory
 from tests.factories.school import SchoolFactory
 

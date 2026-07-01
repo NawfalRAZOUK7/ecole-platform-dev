@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -20,12 +20,22 @@ function getInitialTheme(): ThemeMode {
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeMode>(() => getInitialTheme());
   const [hasStoredPreference, setHasStoredPreference] = useState(
-    () => window.localStorage.getItem(STORAGE_KEY) !== null
+    () => window.localStorage.getItem(STORAGE_KEY) !== null,
   );
 
+  const isFirstThemeRun = useRef(true);
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
     window.localStorage.setItem(STORAGE_KEY, theme);
+    // Skip the cross-fade on initial mount; animate only on real toggles.
+    if (isFirstThemeRun.current) {
+      isFirstThemeRun.current = false;
+      return;
+    }
+    root.classList.add('theme-transition');
+    const timeoutId = window.setTimeout(() => root.classList.remove('theme-transition'), 320);
+    return () => window.clearTimeout(timeoutId);
   }, [theme]);
 
   useEffect(() => {

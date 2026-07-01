@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/gradebook.dart';
-import 'package:ecole_platform/features/gradebook/grade_detail_screen.dart';
-import 'package:ecole_platform/features/gradebook/gradebook_screen.dart';
+import 'package:ecole_platform/domain/entities/academic/gradebook.dart';
+import 'package:ecole_platform/features/academic/gradebook/grade_detail_screen.dart';
+import 'package:ecole_platform/features/academic/gradebook/gradebook_screen.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/factories.dart';
@@ -71,8 +71,12 @@ void main() {
           ],
         ),
       );
-      when(() => gradebookRepository.exportGrades(any(),
-          format: any(named: 'format'))).thenAnswer((_) async => null);
+      when(
+        () => gradebookRepository.exportGrades(
+          any(),
+          format: any(named: 'format'),
+        ),
+      ).thenAnswer((_) async => null);
       when(() => gradebookRepository.updateGrades(any()))
           .thenAnswer((_) async {});
 
@@ -105,8 +109,12 @@ void main() {
           className: '6A',
         ),
       );
-      when(() => gradebookRepository.exportGrades(any(),
-          format: any(named: 'format'))).thenAnswer((_) async => null);
+      when(
+        () => gradebookRepository.exportGrades(
+          any(),
+          format: any(named: 'format'),
+        ),
+      ).thenAnswer((_) async => null);
       when(() => gradebookRepository.updateGrades(any()))
           .thenAnswer((_) async {});
 
@@ -206,8 +214,12 @@ void main() {
           ],
         ),
       );
-      when(() => gradebookRepository.exportGrades(any(),
-          format: any(named: 'format'))).thenAnswer((_) async => null);
+      when(
+        () => gradebookRepository.exportGrades(
+          any(),
+          format: any(named: 'format'),
+        ),
+      ).thenAnswer((_) async => null);
       when(() => gradebookRepository.updateGrades(any()))
           .thenAnswer((_) async {});
 

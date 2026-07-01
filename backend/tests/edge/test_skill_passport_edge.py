@@ -10,11 +10,11 @@ from pydantic import ValidationError as PydanticValidationError
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.skill_passport import (
+from app.schemas.academic.skill_passport import (
     SkillDimensionCreateRequest,
     SkillMilestoneCreateRequest,
 )
-from app.services.skill_passport_service import SkillPassportService
+from app.services.academic.skill_passport_service import SkillPassportService
 
 
 @pytest_asyncio.fixture(autouse=True)

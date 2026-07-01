@@ -8,6 +8,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
+EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 FROM node:22-alpine AS build
@@ -18,7 +19,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine AS production
+FROM nginx:1.28-alpine AS production
 
 # Run nginx as non-root user
 RUN chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \

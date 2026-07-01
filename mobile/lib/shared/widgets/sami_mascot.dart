@@ -26,11 +26,11 @@ import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 // ---------------------------------------------------------------------------
 
 enum SamiState {
-  idle,      // breathing animation
-  happy,     // wings up, big smile
-  thinking,  // head tilt, question mark
-  speaking,  // beak opens + closes
-  sleeping,  // eyes closed, ZZZ
+  idle, // breathing animation
+  happy, // wings up, big smile
+  thinking, // head tilt, question mark
+  speaking, // beak opens + closes
+  sleeping, // eyes closed, ZZZ
 }
 
 // ---------------------------------------------------------------------------
@@ -76,9 +76,13 @@ class _SamiMascotState extends State<SamiMascot>
     _blink = TweenSequence<double>([
       TweenSequenceItem(tween: ConstantTween(1.0), weight: 90),
       TweenSequenceItem(
-          tween: Tween(begin: 1.0, end: 0.0), weight: 5),
+        tween: Tween(begin: 1.0, end: 0.0),
+        weight: 5,
+      ),
       TweenSequenceItem(
-          tween: Tween(begin: 0.0, end: 1.0), weight: 5),
+        tween: Tween(begin: 0.0, end: 1.0),
+        weight: 5,
+      ),
     ]).animate(_ctrl);
   }
 
@@ -105,9 +109,7 @@ class _SamiMascotState extends State<SamiMascot>
                   widget.state == SamiState.sleeping ? 0 : -_bounce.value,
                 ),
                 child: Transform.rotate(
-                  angle: widget.state == SamiState.thinking
-                      ? math.pi / 12
-                      : 0,
+                  angle: widget.state == SamiState.thinking ? math.pi / 12 : 0,
                   child: CustomPaint(
                     size: Size(widget.size, widget.size),
                     painter: _SamiPainter(
@@ -138,8 +140,8 @@ class _SamiMascotState extends State<SamiMascot>
 
 class _SamiPainter extends CustomPainter {
   final SamiState state;
-  final double blinkProgress;  // 1 = open, 0 = closed
-  final double animProgress;   // 0..1 animation loop
+  final double blinkProgress; // 1 = open, 0 = closed
+  final double animProgress; // 0..1 animation loop
 
   const _SamiPainter({
     required this.state,
@@ -161,9 +163,10 @@ class _SamiPainter extends CustomPainter {
     final bellyPaint = Paint()..color = KidsContentColors.samiSecondary;
     canvas.drawOval(
       Rect.fromCenter(
-          center: Offset(cx, cy + r * 0.25),
-          width: r * 1.0,
-          height: r * 0.8),
+        center: Offset(cx, cy + r * 0.25),
+        width: r * 1.0,
+        height: r * 0.8,
+      ),
       bellyPaint,
     );
 
@@ -174,25 +177,45 @@ class _SamiPainter extends CustomPainter {
       // Left wing (raised)
       final leftWing = Path()
         ..moveTo(cx - r * 0.9, cy)
-        ..quadraticBezierTo(cx - r * 1.4, cy - r * 0.8, cx - r * 0.5, cy - r * 0.4)
+        ..quadraticBezierTo(
+          cx - r * 1.4,
+          cy - r * 0.8,
+          cx - r * 0.5,
+          cy - r * 0.4,
+        )
         ..close();
       canvas.drawPath(leftWing, wingPaint);
       // Right wing (raised)
       final rightWing = Path()
         ..moveTo(cx + r * 0.9, cy)
-        ..quadraticBezierTo(cx + r * 1.4, cy - r * 0.8, cx + r * 0.5, cy - r * 0.4)
+        ..quadraticBezierTo(
+          cx + r * 1.4,
+          cy - r * 0.8,
+          cx + r * 0.5,
+          cy - r * 0.4,
+        )
         ..close();
       canvas.drawPath(rightWing, wingPaint);
     } else {
       // Resting wings
       final leftWing = Path()
         ..moveTo(cx - r * 0.8, cy + r * 0.1)
-        ..quadraticBezierTo(cx - r * 1.2, cy + r * 0.5, cx - r * 0.4, cy + r * 0.6)
+        ..quadraticBezierTo(
+          cx - r * 1.2,
+          cy + r * 0.5,
+          cx - r * 0.4,
+          cy + r * 0.6,
+        )
         ..close();
       canvas.drawPath(leftWing, wingPaint);
       final rightWing = Path()
         ..moveTo(cx + r * 0.8, cy + r * 0.1)
-        ..quadraticBezierTo(cx + r * 1.2, cy + r * 0.5, cx + r * 0.4, cy + r * 0.6)
+        ..quadraticBezierTo(
+          cx + r * 1.2,
+          cy + r * 0.5,
+          cx + r * 0.4,
+          cy + r * 0.6,
+        )
         ..close();
       canvas.drawPath(rightWing, wingPaint);
     }
@@ -330,11 +353,14 @@ class _SpeechBubble extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(maxWidth: 240),
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: KidsContentColors.samiBubble,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: KidsContentColors.samiBubbleBorder, width: 1.5),
+        border:
+            Border.all(color: KidsContentColors.samiBubbleBorder, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: KidsContentColors.samiPrimary.withAlpha(30),

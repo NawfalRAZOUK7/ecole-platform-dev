@@ -1,0 +1,209 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "rule-sync-push-503",
+      "name": "Chaos: Sync Push 503",
+      "description": "Simulate sync push server failure (503) to test offline-first behaviour",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Contains",
+          "conditionValue": "/api/v1/sync/push",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "ModifyResponse",
+          "body": {
+            "statusCode": 503,
+            "statusText": "Service Unavailable",
+            "headers": {
+              "Content-Type": "application/json",
+              "Retry-After": "60"
+            },
+            "body": {
+              "error": {
+                "code": "ERR-SYS-503",
+                "message": "Sync service temporarily unavailable",
+                "category": "system",
+                "retry_after": 60,
+                "timestamp": "{{timestamp}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rule-sync-delay-800ms",
+      "name": "Chaos: Sync API Delay 800ms",
+      "description": "Add 800ms latency to sync endpoints to test UI loader/timeout tolerance",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Regex",
+          "conditionValue": ".*/api/v1/sync/.*",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "DelayRequest",
+          "delay": 800
+        }
+      ]
+    },
+    {
+      "id": "rule-rate-limit-429",
+      "name": "Chaos: Rate Limit 429",
+      "description": "Simulate rate limiting (429) on API root to test client retry behaviour",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Contains",
+          "conditionValue": "/api/v1/",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "ModifyResponse",
+          "body": {
+            "statusCode": 429,
+            "statusText": "Too Many Requests",
+            "headers": {
+              "Content-Type": "application/json",
+              "Retry-After": "5"
+            },
+            "body": {
+              "error": {
+                "code": "ERR-RATE-429",
+                "message": "Rate limit exceeded",
+                "category": "rate_limit",
+                "retry_after": 5,
+                "timestamp": "{{timestamp}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rule-webhook-dedup-bypass",
+      "name": "Chaos: Webhook Dedup Bypass (Optional)",
+      "description": "Bypass webhook deduplication to test idempotency under load",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Regex",
+          "conditionValue": ".*/api/v1/payments/webhook/.*",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "ModifyRequest",
+          "body": {
+            "headers": {
+              "X-Bypass-Dedup": "true"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rule-db-failure-503",
+      "name": "Chaos: Database Failure 503",
+      "description": "Simulate database connection failure (503) for DB-dependent endpoints",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Regex",
+          "conditionValue": ".*/api/v1/schools/.*/(students|teachers|classes).*",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "ModifyResponse",
+          "body": {
+            "statusCode": 503,
+            "statusText": "Service Unavailable",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "error": {
+                "code": "ERR-DB-503",
+                "message": "Database connection failed",
+                "category": "system",
+                "timestamp": "{{timestamp}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rule-redis-failure-503",
+      "name": "Chaos: Redis Failure 503",
+      "description": "Simulate Redis connection failure (503) for cache/session-dependent endpoints",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Regex",
+          "conditionValue": ".*/api/v1/auth/sessions.*",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "ModifyResponse",
+          "body": {
+            "statusCode": 503,
+            "statusText": "Service Unavailable",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "error": {
+                "code": "ERR-CACHE-503",
+                "message": "Cache service unavailable",
+                "category": "system",
+                "timestamp": "{{timestamp}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rule-slow-query-delay",
+      "name": "Chaos: Slow Query Delay 5s",
+      "description": "Add 5s delay to simulate slow database queries",
+      "enabled": false,
+      "conditions": [
+        {
+          "type": "UrlFilter",
+          "conditionType": "Regex",
+          "conditionValue": ".*/api/v1/schools/.*/(students|teachers|classes).*",
+          "source": "Request"
+        }
+      ],
+      "actions": [
+        {
+          "type": "DelayRequest",
+          "delay": 5000
+        }
+      ]
+    }
+  ]
+}

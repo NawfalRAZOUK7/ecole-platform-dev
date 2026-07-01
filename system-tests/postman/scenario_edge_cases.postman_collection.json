@@ -1,0 +1,202 @@
+{
+  "info": {
+    "name": "École Platform - Edge Case Tests",
+    "description": "Edge case tests for expired tokens, invalid OTPs, malformed requests, and missing headers. Run with: newman run scenario_edge_cases.postman_collection.json -e env_scenarios.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Expired Token",
+      "item": [
+        {
+          "name": "GET /auth/me with expired token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJleHAiOjE2MDAwMDAwMDB9.invalid",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (unauthorized)\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has error\", function () {",
+                  "    pm.expect(responseBody).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Invalid OTP",
+      "item": [
+        {
+          "name": "POST /recovery/verify with invalid OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"otp\": \"000000\"\n}"
+            },
+            "url": "{{baseUrl}}/recovery/verify"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (invalid OTP)\", function () {",
+                  "    pm.expect([401, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 401) {",
+                  "    responseBody = pm.response.json();",
+                  "    pm.test(\"Response has error indicating invalid OTP\", function () {",
+                  "        pm.expect(responseBody.error).to.have.property(\"message\");",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Malformed Request",
+      "item": [
+        {
+          "name": "POST /auth/login with missing required fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ecole-benani.ma\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 422 (validation error)\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has error\", function () {",
+                  "    pm.expect(responseBody).to.have.property(\"error\");",
+                  "});",
+                  "",
+                  "pm.test(\"Error category is validation\", function () {",
+                  "    pm.expect(responseBody.error).to.have.property(\"category\", \"validation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Missing Headers",
+      "item": [
+        {
+          "name": "GET /auth/me without Authorization header",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (unauthorized)\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has error\", function () {",
+                  "    pm.expect(responseBody).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login without Content-Type header",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"admin@ecole-benani.ma\",\"password\":\"admin123\",\"school_id\":\"00000000-0000-4000-8000-000000000001\"}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 415 (unsupported media type) or 422\", function () {",
+                  "    pm.expect([415, 422]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

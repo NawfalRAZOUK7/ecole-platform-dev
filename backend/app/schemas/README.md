@@ -17,25 +17,19 @@ All schemas inherit from `BaseModel` and use Pydantic v2 features.
 
 ```
 schemas/
-├── auth.py              # Login, token, user profile
-├── school.py            # School, class, enrollment
-├── lms.py               # Course, assignment, submission
-├── billing.py           # Invoice, payment, subscription
-├── billing_enhancements.py  # Advanced billing schemas
-├── calendar.py          # Event, RSVP
-├── com.py               # Message, notification
-├── documents.py         # Document, file upload
-├── erp.py               # Timetable, resource
-├── feature.py           # Feature flag
-├── gradebook.py         # Grade, rubric
-├── lms.py               # Course, assignment, quiz
-├── notifications.py     # Notification preferences
-├── profile.py           # User profile
-├── question_bank.py     # Quiz question
-├── quiz.py              # Quiz, attempt, result
-├── reports.py           # Report, report schedule
-├── rubric.py            # Rubric, evaluation criteria
-└── (more domain schemas)
+├── auth/                 # login, tokens, invitations
+├── user/                 # profile.py
+├── school/               # tenant + micro_school
+├── academic/             # erp, programs, gradebook, attendance analytics, timetable, skill_passport
+├── lms/                  # core LMS + quiz, question_bank, rubric, levels, student_work
+├── billing/              # invoices/fees + enhancements.py, budget.py
+├── content/              # cms, documents, uploads, storage, resources
+├── communication/        # messaging (init), notifications, calendar
+├── reports/              # report jobs, schedules, analytics, financial_health
+├── admin/                # MEN compliance, feature toggles
+├── ai/                   # AI preferences, games, rewards
+├── sync/                 # device sync queue
+└── README.md
 ```
 
 ## Schema Patterns

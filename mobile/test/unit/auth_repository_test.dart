@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/data/repositories_impl/auth_repository_impl.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/data/repositories_impl/auth/auth_repository_impl.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 
 import '../helpers/api_responses.dart';

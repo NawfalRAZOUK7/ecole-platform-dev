@@ -27,6 +27,8 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
+      serviceAccountName: {{ include "ecole-platform.serviceAccountName" . }}
+      automountServiceAccountToken: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -35,6 +37,10 @@ spec:
         - name: migrate
           image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
           imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
           command:
             - /bin/sh
             - -c
@@ -60,6 +66,13 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backend.secrets.databaseUrl }}
                   key: DATABASE_URL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       containers:
         - name: backend
           image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
@@ -68,6 +81,10 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           {{- with .Values.backend.command }}
           command:
             {{- toYaml . | nindent 12 }}
@@ -105,6 +122,12 @@ spec:
                   name: {{ .Values.backend.secrets.smtpPassword }}
                   key: SMTP_PASSWORD
                   optional: true
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /api/v1/health
@@ -126,6 +149,13 @@ spec:
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: uploads
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi

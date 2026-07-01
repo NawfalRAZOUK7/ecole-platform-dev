@@ -1,0 +1,117 @@
+name: Mobile CI
+
+env:
+  FLUTTER_VERSION: "3.35.7"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    name: Analyze + Test (Flutter)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          test -f .env || cp .env.example .env
+          flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run unit tests with coverage
+        run: flutter test --coverage --reporter=expanded
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-coverage
+          path: mobile/coverage/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: mobile/coverage/lcov.info
+          flags: mobile-unit
+          fail_ci_if_error: false
+
+  integration-tests:
+    name: "Integration Tests (Flutter iOS Simulator) (${{ matrix.suite }})"
+    runs-on: macos-latest
+    timeout-minutes: 75
+    needs: analyze-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: offline-sync
+            test-file: integration_test/offline_sync_test.dart
+            test-timeout: 30m
+          - suite: app-flows
+            test-file: integration_test/app_flows_test.dart
+            test-timeout: 60m
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          test -f .env || cp .env.example .env
+          flutter pub get
+
+      - name: Boot iOS simulator
+        run: |
+          DEVICE_ID="$(xcrun simctl list devices available iPhone | awk -F '[()]' '/iPhone 16|iPhone 15|iPhone 14/ { print $2; exit }')"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "No available iPhone simulator found."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+
+      - name: Run integration tests
+        run: flutter test --ignore-timeouts --timeout=${{ matrix.test-timeout }} -d "$DEVICE_ID" --reporter=expanded "${{ matrix.test-file }}"

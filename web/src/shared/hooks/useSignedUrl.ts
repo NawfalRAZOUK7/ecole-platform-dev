@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiClientError, getDownloadUrl, type DownloadMetadata } from '@/services/api/client';
+import { ApiClientError, getDownloadUrl, type DownloadMetadata } from '@/core/api/client';
 
 export const SIGNED_URL_DEFAULT_TTL_MS = 10 * 60 * 1000;
 export const SIGNED_URL_CACHE_RATIO = 0.8;

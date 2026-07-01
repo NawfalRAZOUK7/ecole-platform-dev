@@ -6,7 +6,7 @@ Validates content, course, assignment, quiz, and progress schemas.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -18,7 +18,7 @@ from app.schemas.lms import (
     SubmissionCreateRequest,
     SubmissionResponse,
 )
-from app.schemas.programs import (
+from app.schemas.academic.programs import (
     ProgramCreateRequest,
     ProgramResponse,
     ProgramVersionResponse,
@@ -38,7 +38,7 @@ class TestContentItemSchemas:
             title="Math Basics",
             content_type="video",
             subject="mathematics",
-            level_band="CP",
+            level_band="1AEP",
             status="published",
         )
         assert item.content_type == "video"
@@ -76,7 +76,7 @@ class TestAssignmentSchemas:
             teacher_id="teacher-1",
             title="Homework 1",
             description="Solve exercises 1-10",
-            due_at=datetime.utcnow().isoformat(),
+            due_at=datetime.now(timezone.utc).isoformat(),
             total_points=20,
         )
         assert assignment.total_points == 20
@@ -94,7 +94,7 @@ class TestAssignmentSchemas:
             assignment_id="assign-1",
             student_id="stu-1",
             status="submitted",
-            submitted_at=datetime.utcnow().isoformat(),
+            submitted_at=datetime.now(timezone.utc).isoformat(),
         )
         assert resp.status == "submitted"
 
@@ -125,7 +125,7 @@ class TestProgramSchemas:
             is_active=True,
             version_label="1.0",
             effective_from=date.today(),
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             updated_at=None,
         )
         assert resp.is_active is True
@@ -140,7 +140,7 @@ class TestProgramSchemas:
             effective_from=date.today(),
             retired_at=None,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             updated_at=None,
         )
         assert ver.version_label == "1.0"

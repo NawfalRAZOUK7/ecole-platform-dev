@@ -9,7 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/data/api/api_client.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/taxonomy/taxonomy.g.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'register_steps.dart';
@@ -86,9 +88,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   // Step 3 — role fields
   final _dobController = TextEditingController();
-  final _classLevelController = TextEditingController();
+  String _classLevel = '';
   String _relationshipType = '';
-  final _subjectController = TextEditingController();
+  String _subjectSpecialty = '';
   final _qualificationController = TextEditingController();
 
   // Step 4 — OTP
@@ -106,8 +108,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _dobController.dispose();
-    _classLevelController.dispose();
-    _subjectController.dispose();
     _qualificationController.dispose();
     _otpController.dispose();
     super.dispose();
@@ -153,14 +153,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (_dobController.text.isNotEmpty) {
       profileData['date_of_birth'] = _dobController.text;
     }
-    if (_classLevelController.text.isNotEmpty) {
-      profileData['class_level'] = _classLevelController.text;
+    if (_classLevel.isNotEmpty) {
+      profileData['class_level'] = _classLevel;
     }
     if (_relationshipType.isNotEmpty) {
       profileData['relationship_type'] = _relationshipType;
     }
-    if (_subjectController.text.isNotEmpty) {
-      profileData['subject_specialty'] = _subjectController.text;
+    if (_subjectSpecialty.isNotEmpty) {
+      profileData['subject_specialty'] = _subjectSpecialty;
     }
     if (_qualificationController.text.isNotEmpty) {
       profileData['qualification'] = _qualificationController.text;
@@ -236,13 +236,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final steps = _Step.values;
     final stepIndex = steps.indexOf(_step);
 
     return Scaffold(
       body: Semantics(
         container: true,
-        label: 'Inscription avec invitation',
+        label: t.t('auth.registerWithInvitation'),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -252,11 +253,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header
-                  Icon(Icons.school,
-                      size: 64, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.school,
+                    size: 64,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(height: 16),
                   Text(
-                    'École Platform',
+                    t.t('auth.appName'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -265,7 +269,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Créer un compte',
+                    t.t('auth.createAccount'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -302,8 +306,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              color: theme.colorScheme.error, size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: theme.colorScheme.error,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

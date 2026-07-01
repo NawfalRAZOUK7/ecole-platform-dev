@@ -168,6 +168,8 @@ def downgrade() -> None:
 
 ## Migration Naming Convention
 
+**New revisions (recommended)** — In the human-readable slug after the revision hash, prefix with a **domain** tag for grepability and ownership, e.g. `a1b2c3d4e5f6_billing_add_invoice_columns.py`, `f7e8d9c0b1a2_lms_add_quiz_metadata.py`. Existing files keep historical names; do not rename old revisions.
+
 ```
 {12-char-revision}_{action}_{description}.py
 

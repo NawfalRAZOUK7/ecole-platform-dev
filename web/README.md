@@ -19,6 +19,28 @@ npm run test:e2e
 npm run build
 ```
 
+## Structure
+
+Feature code is grouped by the same bounded contexts used by the backend:
+
+```
+src/features/
+├── academic/       # attendance, gradebook, programs, skills, timetable, teacher academic flows
+├── admin/          # dashboard, users, invitations, audit, feature toggles, compliance
+├── ai/             # games, rewards, activities, badge administration
+├── auth/
+├── billing/        # billing setup, budgets, invoices
+├── communication/  # calendar, messages, notifications, announcements
+├── content/        # CMS, documents/resources, feed, content player, teacher/student content
+├── lms/            # quizzes, question bank, rubrics, submissions, teacher/student LMS flows
+├── reports/        # analytics and financial health
+├── school/         # micro-schools and school settings
+├── sync/
+└── user/           # profile, family, privacy, student home
+```
+
+Routes in `src/app/routes.ts` and `src/app/App.tsx` keep their public URLs; only import paths and file ownership follow the domain layout. Shared API infrastructure stays in `src/services/api/`, with domain helpers under `api/ai/`, `api/content/`, and `api/lms/`.
+
 ## New Pages and Flows
 
 ### Rewards viewing

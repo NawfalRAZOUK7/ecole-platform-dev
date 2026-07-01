@@ -6,7 +6,6 @@ Seed data must be loaded before running tests (make seed).
 
 from __future__ import annotations
 
-
 import os
 import subprocess
 import sys
@@ -21,15 +20,14 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
-from testcontainers.postgres import PostgresContainer
 
 import app.core.feature_flags as feature_flags_module
 import app.core.idempotency as idempotency_module
 import app.core.rate_limit as rate_limit_module
 import app.core.redis as core_redis_module
-import app.services.dashboard_analytics as dashboard_analytics_module
-import app.services.notification_hub as notification_hub_module
-import app.services.progress as progress_module
+import app.services.reports.dashboard_analytics as dashboard_analytics_module
+import app.services.communication.notification_hub as notification_hub_module
+import app.services.academic.progress as progress_module
 from app.core.config import settings
 from app.core.database import Base, engine as app_engine
 from app.core.dependencies import AuthContext
@@ -37,10 +35,16 @@ from app.core.permissions import get_permissions_for_role
 from app.core.security import hash_password
 from app.models.iam import User
 
+# Reusable fixtures from the _support helper package (builders, etc.).
+# Registered as a plugin so they are available test-wide without imports.
+pytest_plugins = ("tests._support.fixtures.common",)
+
 # Fixed IDs from seed.py
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 PARENT_EMAIL = "parent.alaoui@gmail.com"
@@ -72,6 +76,7 @@ SEED_AUTH_CREDENTIALS = {
 LIVE_SEED_AUTH_FIXTURES = {
     "client",
     "admin_token",
+    "director_token",
     "teacher_token",
     "student_token",
     "parent_token",
@@ -283,6 +288,16 @@ async def admin_token(client: httpx.AsyncClient) -> str:
 
 
 @pytest_asyncio.fixture(loop_scope="function")
+async def director_token(client: httpx.AsyncClient) -> str:
+    """Get a director (DIR) access token — oversight, exports, approvals."""
+    return await _login_with_seed_retry(
+        client,
+        email=DIRECTOR_EMAIL,
+        password=DIRECTOR_PASSWORD,
+    )
+
+
+@pytest_asyncio.fixture(loop_scope="function")
 async def teacher_token(client: httpx.AsyncClient) -> str:
     """Get a teacher access token."""
     return await _login_with_seed_retry(
@@ -314,17 +329,17 @@ async def parent_token(client: httpx.AsyncClient) -> str:
 
 @pytest.fixture(scope="session")
 def postgres_url() -> str:
-    """Disposable PostgreSQL URL for integration-style tests."""
-    with PostgresContainer("postgres:16-alpine") as pg:
-        yield (
-            pg.get_connection_url()
-            .replace(
-                "postgresql+psycopg2://",
-                "postgresql+asyncpg://",
-                1,
-            )
-            .replace("postgresql://", "postgresql+asyncpg://", 1)
-        )
+    """PostgreSQL URL for integration-style tests.
+
+    Uses the disposable test database on the shared dev postgres container
+    (ecole-postgres) instead of spinning up a new container per session.
+    This cuts ~2-3 minutes off every test run.
+    """
+    return (
+        os.getenv("TEST_DATABASE_URL")
+        or os.getenv("DATABASE_URL")
+        or "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform_test"
+    )
 
 
 @pytest_asyncio.fixture(loop_scope="function")

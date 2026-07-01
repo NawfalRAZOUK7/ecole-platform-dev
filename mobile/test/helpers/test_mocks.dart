@@ -1,16 +1,16 @@
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/data/local_store/attendance_store.dart';
-import 'package:ecole_platform/data/local_store/cache_store.dart';
-import 'package:ecole_platform/data/local_store/documents_store.dart';
-import 'package:ecole_platform/data/local_store/events_store.dart';
-import 'package:ecole_platform/data/local_store/notifications_store.dart';
-import 'package:ecole_platform/data/local_store/reports_store.dart';
-import 'package:ecole_platform/domain/entities/gradebook.dart';
-import 'package:ecole_platform/domain/repositories/sync_repository.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/core/storage/attendance_store.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
+import 'package:ecole_platform/core/storage/documents_store.dart';
+import 'package:ecole_platform/core/storage/events_store.dart';
+import 'package:ecole_platform/core/storage/notifications_store.dart';
+import 'package:ecole_platform/core/storage/reports_store.dart';
+import 'package:ecole_platform/domain/entities/academic/gradebook.dart';
+import 'package:ecole_platform/domain/repositories/sync/sync_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
-import 'package:ecole_platform/shared/secure_storage.dart';
+import 'package:ecole_platform/core/storage/secure_storage.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 

@@ -1,8 +1,14 @@
 FROM node:22-alpine
 
 WORKDIR /app
-COPY package*.json ./
+RUN apk add --no-cache su-exec && chown node:node /app
+COPY --chown=node:node package*.json ./
+USER node
 RUN npm ci
-COPY . .
+USER root
+COPY docker-entrypoint.dev.sh /usr/local/bin/docker-entrypoint.dev.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.dev.sh
+COPY --chown=node:node . .
 EXPOSE 5173
+ENTRYPOINT ["docker-entrypoint.dev.sh"]
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

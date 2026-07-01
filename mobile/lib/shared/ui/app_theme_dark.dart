@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:ecole_platform/shared/ui/motion.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/radii.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
@@ -7,6 +8,7 @@ import 'package:ecole_platform/shared/ui/tokens/typography.dart';
 
 final ThemeData appDarkTheme = ThemeData(
   brightness: Brightness.dark,
+  pageTransitionsTheme: appPageTransitionsTheme,
   colorScheme: ColorScheme.fromSeed(
     seedColor: AppColors.darkPrimary,
     brightness: Brightness.dark,
@@ -38,7 +40,7 @@ final ThemeData appDarkTheme = ThemeData(
   cardTheme: CardThemeData(
     elevation: 1,
     color: AppColors.darkSurface,
-    shadowColor: Colors.black.withOpacity(0.25),
+    shadowColor: Colors.black.withValues(alpha: 0.25),
     surfaceTintColor: Colors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -78,6 +80,55 @@ final ThemeData appDarkTheme = ThemeData(
     color: AppColors.darkBorder,
     thickness: 1,
     space: AppSpacing.lg,
+  ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+    ).copyWith(
+      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.darkPrimary.withValues(alpha: 0.38);
+        }
+        return AppColors.darkPrimary;
+      }),
+      foregroundColor: WidgetStateProperty.all(AppColors.darkBackground),
+      elevation: WidgetStateProperty.resolveWith<double>((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return 1;
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return 3;
+        }
+        return 2;
+      }),
+      shadowColor: WidgetStateProperty.all(
+        Colors.black.withValues(alpha: 0.4),
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      foregroundColor: AppColors.darkPrimary,
+      side: const BorderSide(color: AppColors.darkPrimary, width: 1.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: AppColors.darkPrimary,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+      ),
+    ),
   ),
   chipTheme: ChipThemeData(
     backgroundColor: AppColors.darkSurface,

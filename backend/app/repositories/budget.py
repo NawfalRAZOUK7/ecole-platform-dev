@@ -11,7 +11,7 @@ from app.models.budget import (
     BudgetAllocation,
     BudgetRequest,
     BudgetTransaction,
-    MicroBudget,
+    SchoolBudget,
 )
 from app.models.erp import AcademicYear, Class
 from app.models.iam import User
@@ -43,12 +43,12 @@ class BudgetRepository(BaseRepository):
         *,
         school_id: uuid.UUID | None = None,
         include_allocations: bool = False,
-    ) -> MicroBudget | None:
-        query = select(MicroBudget).where(MicroBudget.id == budget_id)
+    ) -> SchoolBudget | None:
+        query = select(SchoolBudget).where(SchoolBudget.id == budget_id)
         if school_id is not None:
-            query = query.where(MicroBudget.school_id == school_id)
+            query = query.where(SchoolBudget.school_id == school_id)
         if include_allocations:
-            query = query.options(selectinload(MicroBudget.allocations))
+            query = query.options(selectinload(SchoolBudget.allocations))
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
@@ -58,23 +58,23 @@ class BudgetRepository(BaseRepository):
         school_id: uuid.UUID,
         academic_year_id: uuid.UUID | None = None,
         status: str | None = None,
-    ) -> list[MicroBudget]:
-        query = select(MicroBudget).where(MicroBudget.school_id == school_id)
+    ) -> list[SchoolBudget]:
+        query = select(SchoolBudget).where(SchoolBudget.school_id == school_id)
         if academic_year_id is not None:
-            query = query.where(MicroBudget.academic_year_id == academic_year_id)
+            query = query.where(SchoolBudget.academic_year_id == academic_year_id)
         if status:
-            query = query.where(MicroBudget.status == status)
+            query = query.where(SchoolBudget.status == status)
         result = await self.db.execute(
-            query.order_by(MicroBudget.created_at.desc(), MicroBudget.id.asc())
+            query.order_by(SchoolBudget.created_at.desc(), SchoolBudget.id.asc())
         )
         return list(result.scalars().all())
 
-    async def create_budget(self, budget: MicroBudget) -> MicroBudget:
+    async def create_budget(self, budget: SchoolBudget) -> SchoolBudget:
         self.db.add(budget)
         await self.db.flush()
         return budget
 
-    async def save_budget(self, budget: MicroBudget) -> MicroBudget:
+    async def save_budget(self, budget: SchoolBudget) -> SchoolBudget:
         self.db.add(budget)
         await self.db.flush()
         return budget
@@ -91,8 +91,8 @@ class BudgetRepository(BaseRepository):
         query = select(BudgetAllocation).where(BudgetAllocation.id == allocation_id)
         if school_id is not None:
             query = query.join(
-                MicroBudget, MicroBudget.id == BudgetAllocation.budget_id
-            ).where(MicroBudget.school_id == school_id)
+                SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id
+            ).where(SchoolBudget.school_id == school_id)
         if include_budget:
             query = query.options(selectinload(BudgetAllocation.budget))
         if include_requests:
@@ -113,8 +113,8 @@ class BudgetRepository(BaseRepository):
     ) -> list[BudgetAllocation]:
         query = (
             select(BudgetAllocation)
-            .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
-            .where(MicroBudget.school_id == school_id)
+            .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
+            .where(SchoolBudget.school_id == school_id)
         )
         if budget_id is not None:
             query = query.where(BudgetAllocation.budget_id == budget_id)
@@ -154,8 +154,8 @@ class BudgetRepository(BaseRepository):
                 query.join(
                     BudgetAllocation, BudgetAllocation.id == BudgetRequest.allocation_id
                 )
-                .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
-                .where(MicroBudget.school_id == school_id)
+                .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
+                .where(SchoolBudget.school_id == school_id)
             )
         if include_allocation:
             query = query.options(
@@ -177,8 +177,8 @@ class BudgetRepository(BaseRepository):
         query = (
             select(BudgetRequest)
             .join(BudgetAllocation, BudgetAllocation.id == BudgetRequest.allocation_id)
-            .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
-            .where(MicroBudget.school_id == school_id)
+            .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
+            .where(SchoolBudget.school_id == school_id)
         )
         if allocation_id is not None:
             query = query.where(BudgetRequest.allocation_id == allocation_id)
@@ -215,8 +215,8 @@ class BudgetRepository(BaseRepository):
                     BudgetAllocation,
                     BudgetAllocation.id == BudgetTransaction.allocation_id,
                 )
-                .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
-                .where(MicroBudget.school_id == school_id)
+                .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
+                .where(SchoolBudget.school_id == school_id)
             )
         if include_allocation:
             query = query.options(
@@ -240,8 +240,8 @@ class BudgetRepository(BaseRepository):
             .join(
                 BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id
             )
-            .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
-            .where(MicroBudget.school_id == school_id)
+            .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
+            .where(SchoolBudget.school_id == school_id)
         )
         if allocation_id is not None:
             query = query.where(BudgetTransaction.allocation_id == allocation_id)

@@ -50,18 +50,34 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import mimetypes
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
+
+# Register MIME types that may be missing in slim containers (e.g. python:3.12-slim)
+mimetypes.add_type(
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx"
+)
+mimetypes.add_type(
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"
+)
+mimetypes.add_type(
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx"
+)
+
 
 # ---------------------------------------------------------------------------
 # Import the migration module from scripts/ (outside backend/)
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]  # …/ecole-platform-dev
+_REPO_ROOT = (
+    Path(__file__).resolve().parents[4]
+)  # …/ecole-platform-dev (local) or / (Docker)
 _SCRIPTS_DIR = _REPO_ROOT / "scripts"
+if not _SCRIPTS_DIR.is_dir():
+    _SCRIPTS_DIR = Path("/workspace/scripts")  # Docker volume mount
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 

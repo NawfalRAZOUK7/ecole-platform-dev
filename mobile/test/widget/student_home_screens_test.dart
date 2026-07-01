@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/rewards.dart';
-import 'package:ecole_platform/domain/repositories/rewards_repository.dart';
-import 'package:ecole_platform/features/student/student_home_screen.dart';
+import 'package:ecole_platform/domain/entities/ai/rewards.dart';
+import 'package:ecole_platform/domain/repositories/ai/rewards_repository.dart';
+import 'package:ecole_platform/features/user/student/student_home_screen.dart';
 
 import '../helpers/factories.dart';
 import '../helpers/mock_repositories.dart';
@@ -88,8 +88,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Greeting contains the Arabic greeting with name
-      expect(find.textContaining('مرحبا'), findsOneWidget);
+      // French is the default demo locale.
+      expect(find.textContaining('Bonjour'), findsOneWidget);
     });
 
     testWidgets('shows XP and level from rewards data', (tester) async {
@@ -171,17 +171,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Check CTA grid items are rendered
-      expect(find.text('الدروس'), findsOneWidget);
-      expect(find.text('الاختبارات'), findsOneWidget);
-      expect(find.text('الكتابة'), findsOneWidget);
-      expect(find.text('الألعاب'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Leçons'),
+        400,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
 
-      // Check sublabels
-      expect(find.text('تعلّم'), findsOneWidget);
-      expect(find.text('أجب'), findsOneWidget);
-      expect(find.text('اكتب قصة'), findsOneWidget);
-      expect(find.text('العب وتعلّم'), findsOneWidget);
+      // Check web-aligned primary CTA items are rendered.
+      expect(find.text('Leçons'), findsOneWidget);
+      expect(find.text('Quiz'), findsOneWidget);
+      expect(find.text('Écriture'), findsOneWidget);
+      expect(find.text('Jeux'), findsNothing);
     });
 
     testWidgets('shows today\'s schedule when available', (tester) async {

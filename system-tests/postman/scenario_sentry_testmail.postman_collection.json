@@ -1,0 +1,222 @@
+{
+  "info": {
+    "name": "École Platform - Sentry/TestMail Validation",
+    "description": "Validate Sentry error/transaction capture and TestMail email delivery. Run with: newman run scenario_sentry_testmail.postman_collection.json -e env_local.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "testmail_api_key",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testmail_namespace",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sentry_dsn",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sentry Validation",
+      "item": [
+        {
+          "name": "GET /sentry-debug (trigger error)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sentry-debug"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (intentional error)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has error structure\", function () {",
+                  "    var responseBody = pm.response.json();",
+                  "    pm.expect(responseBody).to.have.property(\"error\");",
+                  "    pm.expect(responseBody.error).to.have.property(\"code\");",
+                  "});",
+                  "",
+                  "pm.test(\"Manual verification required: check Sentry dashboard for error event\", function () {",
+                  "    console.log(\"Verify error event at: https://ensmr.sentry.io/issues/?project=4511374465106000\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /health (trigger transaction)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has status healthy\", function () {",
+                  "    var responseBody = pm.response.json();",
+                  "    pm.expect(responseBody).to.have.property(\"status\", \"healthy\");",
+                  "});",
+                  "",
+                  "pm.test(\"Manual verification required: check Sentry dashboard for transaction event\", function () {",
+                  "    console.log(\"Verify transaction at: https://ensmr.sentry.io/performance/?project=4511374465106000\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TestMail Validation",
+      "item": [
+        {
+          "name": "Send Test Email via API",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{testmail_api_key}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"{{test_email}}\",\n  \"subject\": \"TestMail Validation Email\",\n  \"html\": \"<h1>Test Email</h1><p>This is a test email to validate TestMail integration.</p>\"\n}"
+            },
+            "url": {
+              "raw": "https://api.testmail.app/api/v1/email/send",
+              "protocol": "https",
+              "host": [
+                "api",
+                "testmail",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "send"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code reflects TestMail credential state\", function () {",
+                  "    pm.expect([200, 202, 400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "var responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (e) {}",
+                  "if ([200, 202].includes(pm.response.code)) {",
+                  "    pm.test(\"Response has success indicator\", function () { pm.expect(responseBody.success || responseBody.result === \"success\").to.be.true; });",
+                  "} else {",
+                  "    pm.test(\"Missing TestMail credentials handled\", function () { pm.expect(pm.response.code).to.be.oneOf([400, 401]); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fetch Messages from TestMail Namespace",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{testmail_api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://api.testmail.app/api/json?apikey={{testmail_api_key}}&namespace={{testmail_namespace}}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "testmail",
+                "app"
+              ],
+              "path": [
+                "api",
+                "json"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{testmail_api_key}}"
+                },
+                {
+                  "key": "namespace",
+                  "value": "{{testmail_namespace}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code reflects TestMail credential state\", function () {",
+                  "    pm.expect([200, 401]).to.include(pm.response.code);",
+                  "});",
+                  "var responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (e) {}",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"TestMail returned messages collection\", function () {",
+                  "        pm.expect(responseBody.messages || (responseBody.data && responseBody.data.messages)).to.be.an(\"array\");",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"Missing TestMail API key is explicit\", function () { pm.expect(responseBody.result || responseBody.error || responseBody.message).to.exist; });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

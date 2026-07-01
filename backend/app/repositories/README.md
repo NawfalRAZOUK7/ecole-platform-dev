@@ -17,36 +17,18 @@ Pattern: `Service → Repository → SQLAlchemy → Database`
 ```
 repositories/
 ├── base.py              # BaseRepository with CRUD template
-├── auth.py              # User, Session, login history
-├── school.py            # School, Class, Enrollment, AcademicYear
-├── lms.py               # Course, Assignment, ContentItem
-├── billing.py           # Invoice, Payment, LineItem
-├── billing_enhancements.py  # Advanced billing queries
-├── gradebook.py         # Grade, GradeComponent, rubric scoring
-├── messaging.py         # Message conversations
-├── notifications.py     # Notification queries
-├── reports.py           # Report generation & scheduling
-├── analytics.py         # KPI & dashboard metrics
-├── erp.py               # Timetable, TimeSlot, Resource
-├── documents.py         # Document & StudentFile access
-├── calendar.py          # Event, RSVP, reminder queries
-├── cms.py               # Content management queries
-├── ai.py                # AI interaction history
-├── admin.py             # Administrative queries
-├── audit.py             # AuditLog queries
-├── attendance_analytics.py  # Attendance reports
-├── feature.py           # Feature flag queries
-├── gdpr.py              # GDPR data export/delete
-├── login_history.py     # Session login tracking
-├── profile.py           # User profile queries
-├── profile_loader.py    # Cached profile data
-├── progress.py          # Student progress queries
-├── question_bank.py     # Quiz question library
-├── quiz.py              # Quiz & attempt queries
-├── report_schedule.py   # Scheduled report management
-├── rubric.py            # Rubric & evaluation criteria
-├── timetable_generation.py  # Timetable creation
-└── (more domain-specific repos)
+├── auth.py, school.py, lms.py, billing.py, erp.py, …   # core aggregates
+├── lms_quiz.py, lms_question_bank.py, lms_rubric.py
+├── communication_calendar.py, communication_messaging.py, communication_notifications.py
+├── content_documents.py, content_cms.py
+├── academic_*.py        # gradebook, progress, attendance analytics, timetable, skill_passport
+├── reports_analytics.py, reports_financial_health.py, reports_schedule.py
+├── ai_games.py, ai_rewards.py
+├── user_gdpr.py, user_profile.py, auth_login_history.py
+├── admin_feature.py, admin_men_compliance.py
+├── school_micro_school.py
+├── profile_loader.py, …
+└── README.md
 ```
 
 ## Base Repository Pattern

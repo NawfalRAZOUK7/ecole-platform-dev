@@ -7,8 +7,9 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/user.dart';
+import 'package:ecole_platform/domain/entities/user/user.dart';
 
 /// Auth state — immutable value object.
 class AuthState {
@@ -25,6 +26,11 @@ class AuthState {
   final bool biometricAvailable;
   final bool biometricEnabled;
 
+  /// OAuth pending state
+  final String? oauthProvider;
+  final String? oauthState;
+  final String? oauthSchoolId;
+
   const AuthState({
     this.user,
     this.isAuthenticated = false,
@@ -34,6 +40,9 @@ class AuthState {
     this.requires2fa = false,
     this.biometricAvailable = false,
     this.biometricEnabled = false,
+    this.oauthProvider,
+    this.oauthState,
+    this.oauthSchoolId,
   });
 
   AuthState copyWith({
@@ -48,6 +57,10 @@ class AuthState {
     bool clear2fa = false,
     bool? biometricAvailable,
     bool? biometricEnabled,
+    String? oauthProvider,
+    String? oauthState,
+    String? oauthSchoolId,
+    bool clearOAuth = false,
   }) {
     return AuthState(
       user: clearUser ? null : (user ?? this.user),
@@ -59,6 +72,9 @@ class AuthState {
       requires2fa: clear2fa ? false : (requires2fa ?? this.requires2fa),
       biometricAvailable: biometricAvailable ?? this.biometricAvailable,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      oauthProvider: clearOAuth ? null : (oauthProvider ?? this.oauthProvider),
+      oauthState: clearOAuth ? null : (oauthState ?? this.oauthState),
+      oauthSchoolId: clearOAuth ? null : (oauthSchoolId ?? this.oauthSchoolId),
     );
   }
 }
@@ -237,6 +253,69 @@ class AuthNotifier extends StateNotifier<AuthState> {
       biometricAvailable: state.biometricAvailable,
       biometricEnabled: state.biometricEnabled,
     );
+  }
+
+  /// Start OAuth login — get auth URL and open system browser.
+  Future<void> startOAuthLogin(String provider, String schoolId) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final repo = _ref.read(authRepositoryProvider);
+      final redirectUri = 'ecoleplatform://auth/callback';
+      final result = await repo.getOAuthUrl(provider, redirectUri);
+
+      state = state.copyWith(
+        isLoading: false,
+        oauthProvider: provider,
+        oauthState: result['state'],
+        oauthSchoolId: schoolId,
+      );
+
+      final url = Uri.parse(result['auth_url']!);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        state = state.copyWith(error: 'Cannot open browser for OAuth');
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  /// Complete OAuth login after browser redirect with code.
+  Future<void> completeOAuthLogin(
+    String provider,
+    String code,
+    String returnedState,
+  ) async {
+    if (state.oauthState != returnedState) {
+      state = state.copyWith(error: 'Invalid OAuth state', clearOAuth: true);
+      return;
+    }
+
+    final schoolId = state.oauthSchoolId ?? '';
+    state = state.copyWith(isLoading: true, clearError: true, clearOAuth: true);
+
+    try {
+      final repo = _ref.read(authRepositoryProvider);
+      final redirectUri = 'ecoleplatform://auth/callback';
+      await repo.oauthLogin(
+        provider,
+        code,
+        redirectUri,
+        schoolId,
+      );
+
+      final user = await repo.getMe();
+      state = state.copyWith(
+        user: user,
+        isAuthenticated: true,
+        isLoading: false,
+      );
+
+      _ref.read(biometricServiceProvider).resetAttempts();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   /// Clear the error message.

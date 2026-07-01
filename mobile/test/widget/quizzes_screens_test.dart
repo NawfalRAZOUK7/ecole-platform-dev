@@ -1,19 +1,15 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/features/quizzes/teacher_quiz_list_screen.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/features/lms/quizzes/teacher_quiz_list_screen.dart';
 
 import '../helpers/pump_app.dart';
 import '../helpers/test_mocks.dart';
-
-Future<void> _settle(WidgetTester tester) async {
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 300));
-}
 
 void main() {
   group('Quizzes screens', () {
@@ -23,11 +19,13 @@ void main() {
         (tester) async {
       final mockApi = MockApiClient();
 
-      when(() => mockApi.list(
-            any(),
-            params: any(named: 'params'),
-          )).thenAnswer(
-        (_) async => ApiListResponse<Map<String, dynamic>>(
+      when(
+        () => mockApi.list(
+          any(),
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer(
+        (_) async => const ApiListResponse<Map<String, dynamic>>(
           data: [
             {
               'id': 'quiz-1',
@@ -64,10 +62,12 @@ void main() {
         (tester) async {
       final mockApi = MockApiClient();
 
-      when(() => mockApi.list(
-            any(),
-            params: any(named: 'params'),
-          )).thenAnswer(
+      when(
+        () => mockApi.list(
+          any(),
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer(
         (_) async => const ApiListResponse<Map<String, dynamic>>(
           data: [],
           hasMore: false,
@@ -92,10 +92,12 @@ void main() {
       final mockApi = MockApiClient();
       final completer = Completer<ApiListResponse<Map<String, dynamic>>>();
 
-      when(() => mockApi.list(
-            any(),
-            params: any(named: 'params'),
-          )).thenAnswer((_) => completer.future);
+      when(
+        () => mockApi.list(
+          any(),
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => completer.future);
 
       await pumpApp(
         tester,
@@ -109,10 +111,12 @@ void main() {
       expect(find.byType(Scaffold), findsWidgets);
 
       // Resolve to avoid pending-timer assertion on teardown
-      completer.complete(const ApiListResponse<Map<String, dynamic>>(
-        data: [],
-        hasMore: false,
-      ));
+      completer.complete(
+        const ApiListResponse<Map<String, dynamic>>(
+          data: [],
+          hasMore: false,
+        ),
+      );
     });
   });
 }

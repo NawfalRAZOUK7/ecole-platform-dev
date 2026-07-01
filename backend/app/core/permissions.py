@@ -106,6 +106,9 @@ PERM_LMS_SUBMISSION_FILE_UPLOAD = "PERM-LMS:submission-file:upload"
 PERM_LMS_SUBMISSION_FILE_READ = "PERM-LMS:submission-file:read"
 PERM_LMS_CONTENT_ASSET_UPLOAD = "PERM-LMS:content-asset:upload"
 PERM_LMS_CONTENT_ASSET_READ = "PERM-LMS:content-asset:read"
+
+# AI / gamification — authoring of game configurations (content authors only).
+PERM_AI_GAME_CONFIG_MANAGE = "PERM-AI:game-config:manage"
 PERM_LMS_CONTENT_ASSET_DELETE = "PERM-LMS:content-asset:delete"
 PERM_LMS_RESULT_READ = "PERM-LMS:result:read"
 PERM_LMS_CONTENT_READ = "PERM-LMS:content:read"
@@ -314,6 +317,128 @@ PERM_SYS_AUDIT_LOG_READ = "PERM-SYS:audit-log:read"
 # ---------------------------------------------------------------------------
 # Role → Permissions mapping (C6 complete catalog)
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Composition bundles — explicit, NO implicit role inheritance.
+#
+# School roles are composed from named bundles so DIR (oversight) and ADM
+# (operations) are independent SIBLINGS over a shared staff/admin baseline:
+# neither is a superset of the other. (Replaces the former linear
+# ROLE_HIERARCHY SYS→SUP→ADM→DIR→TCH that made ADM ⊇ DIR.) See
+# BACKEND_COMPLETION_PLAN.md §2 for the DIR/ADM/SUP/SYS responsibility matrix.
+# ---------------------------------------------------------------------------
+
+# Teaching / classroom baseline shared by all school staff (was the TCH set).
+_STAFF_BASE: frozenset[str] = frozenset({
+    PERM_IAM_SESSION_CREATE, PERM_IAM_SESSION_REFRESH, PERM_IAM_SESSION_REVOKE,
+    PERM_IAM_SESSION_LIST, PERM_IAM_PASSWORD_CHANGE, PERM_IAM_INVITE_CONSUME,
+    PERM_IAM_RECOVERY_REQUEST, PERM_IAM_RECOVERY_VERIFY, PERM_IAM_RECOVERY_RESET,
+    PERM_ERP_CLASS_READ, PERM_ERP_ATTENDANCE_MARK, PERM_ERP_ATTENDANCE_ANALYTICS_READ,
+    PERM_ERP_PROGRAM_READ, PERM_ERP_TIMETABLE_READ,
+    PERM_ERP_TIMETABLE_EXCEPTION_CREATE, PERM_ERP_TIMETABLE_EXCEPTION_READ,
+    PERM_LMS_COURSE_PUBLISH, PERM_LMS_ASSIGNMENT_CREATE, PERM_LMS_SUBMISSION_GRADE,
+    PERM_LMS_SUBMISSION_FILE_READ, PERM_LMS_CONTENT_READ, PERM_LMS_ACTIVITY_READ,
+    PERM_LMS_CONTENT_ASSET_UPLOAD, PERM_LMS_CONTENT_ASSET_READ,
+    PERM_LMS_CONTENT_ASSET_DELETE, PERM_LMS_ASSESSMENT_CREATE, PERM_LMS_ASSESSMENT_READ,
+    PERM_LMS_ASSESSMENT_PUBLISH, PERM_LMS_RUBRIC_CREATE, PERM_LMS_RUBRIC_READ,
+    PERM_LMS_GRADEBOOK_MANAGE, PERM_LMS_GRADEBOOK_READ, PERM_LMS_QUESTION_BANK_MANAGE,
+    PERM_LMS_QUESTION_BANK_READ, PERM_CMS_CONTENT_ASSIGN, PERM_CMS_CONTENT_SUBMIT,
+    PERM_QUIZ_CREATE, PERM_QUIZ_READ, PERM_QUIZ_MANAGE, PERM_QUIZ_PUBLISH,
+    PERM_QUIZ_ANALYTICS, PERM_PROGRESS_READ, PERM_PROGRESS_CLASS_READ,
+    PERM_BUDGET_READ, PERM_BUDGET_REQUEST_CREATE, PERM_BUDGET_REQUEST_READ,
+    PERM_BUDGET_TRANSACTION_READ, PERM_SKILL_DIMENSION_READ, PERM_SKILL_MILESTONE_READ,
+    PERM_SKILL_PROGRESS_READ, PERM_SKILL_PROGRESS_EVALUATE, PERM_SKILL_PASSPORT_READ,
+    PERM_SKILL_PASSPORT_GENERATE, PERM_REWARDS_AWARD, PERM_REWARDS_VIEW,
+    PERM_COMPLY_CURRICULUM_READ, PERM_COMPLY_OBJECTIVE_READ, PERM_COMPLY_MAPPING_CREATE,
+    PERM_COMPLY_MAPPING_READ, PERM_SYNC_PUSH, PERM_SYNC_PULL, PERM_SYNC_STATUS_READ,
+    PERM_REP_REPORT_GENERATE, PERM_REP_REPORT_READ, PERM_CAL_EVENT_CREATE,
+    PERM_CAL_EVENT_READ, PERM_CAL_EVENT_UPDATE, PERM_CAL_RSVP_RESPOND, PERM_CAL_RSVP_READ,
+    PERM_DOC_DOCUMENT_UPLOAD, PERM_DOC_DOCUMENT_READ, PERM_DOC_RESOURCE_CREATE,
+    PERM_DOC_RESOURCE_READ, PERM_DOC_RESOURCE_UPDATE, PERM_DOC_RESOURCE_DELETE,
+    PERM_DOC_RESOURCE_RATE, PERM_DOC_BULK_DOWNLOAD, PERM_COM_NOTIFICATION_READ,
+    PERM_COM_MESSAGE_SEND, PERM_COM_CONVERSATION_CREATE, PERM_COM_CONVERSATION_READ,
+    PERM_COM_ANNOUNCEMENT_READ, PERM_IA_REQUEST_CREATE, PERM_IA_REQUEST_READ,
+    PERM_IA_REQUEST_OVERRIDE,
+})
+
+# Shared admin baseline — reads/oversight BOTH DIR and ADM need.
+_ADMIN_BASE: frozenset[str] = frozenset({
+    PERM_ADM_DASHBOARD_READ, PERM_ADM_USER_READ, PERM_ADM_INVITATION_READ,
+    PERM_ADM_SCHOOL_READ, PERM_ADM_SETTINGS_READ, PERM_PROF_ADMIN_READ,
+    PERM_IAM_PARENT_LINK_READ, PERM_IAM_LOGIN_HISTORY_READ,
+    PERM_ERP_PROGRAM_READ, PERM_ERP_ENROLLMENT_READ,
+    PERM_LMS_COURSE_READ, PERM_LMS_ACTIVITY_READ, PERM_REP_ANALYTICS_READ,
+    PERM_BIL_INVOICE_READ, PERM_BIL_PAYMENT_READ, PERM_BIL_PROOF_READ,
+    PERM_BIL_FEE_READ, PERM_BIL_PAYMENT_PLAN_READ,
+    PERM_BUDGET_READ, PERM_BUDGET_REQUEST_READ, PERM_BUDGET_TRANSACTION_READ,
+    PERM_BUDGET_ANALYTICS_READ,
+    PERM_SYNC_DEVICE_READ, PERM_SYNC_CONFLICT_READ, PERM_SYNC_STATUS_READ,
+    PERM_FINHEALTH_RETENTION_READ, PERM_FINHEALTH_CASHFLOW_READ,
+    PERM_FINHEALTH_COST_READ, PERM_FINHEALTH_SNAPSHOT_READ,
+    PERM_COMPLY_REPORT_READ, PERM_COMPLY_REPORT_GENERATE,
+})
+
+# DIR-only — oversight, approvals, institutional voice (NOT operations).
+_DIR_OVERSIGHT: frozenset[str] = frozenset({
+    PERM_ADM_AUDIT_READ,
+    PERM_ADM_ANNOUNCEMENT_MANAGE, PERM_COM_ANNOUNCEMENT_CREATE,
+    PERM_COM_ANNOUNCEMENT_PUBLISH,
+    PERM_REP_EXPORT_CREATE, PERM_RPT_SCHEDULE_MANAGE,
+    PERM_BUDGET_APPROVE,
+    PERM_GDPR_DATA_DELETE,
+})
+
+# ADM-only — the operational engine (current ADM set + ops moved off DIR).
+_ADM_OPS: frozenset[str] = frozenset({
+    PERM_ADM_USER_MANAGE, PERM_ADM_USER_CREATE, PERM_ADM_SCHOOL_MANAGE,
+    PERM_ADM_SETTINGS_UPDATE, PERM_GDPR_CONSENT_MANAGE,
+    PERM_IAM_INVITE_CREATE, PERM_IAM_PARENT_LINK_CREATE, PERM_IAM_PARENT_LINK_DELETE,
+    PERM_ERP_ENROLLMENT_ASSIGN, PERM_ERP_ASSIGNMENT_UPDATE, PERM_ERP_ABSENCE_REVIEW,
+    PERM_ERP_ATTENDANCE_ALERT_MANAGE, PERM_ERP_PROGRAM_MANAGE,
+    PERM_ERP_TIMETABLE_CREATE, PERM_ERP_TIMETABLE_UPDATE, PERM_ERP_TIMETABLE_DELETE,
+    PERM_ERP_TIMETABLE_GENERATE, PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE,
+    PERM_MICRO_SCHOOL_READ, PERM_MICRO_SCHOOL_MANAGE,
+    PERM_SKILL_DIMENSION_MANAGE, PERM_SKILL_MILESTONE_MANAGE,
+    PERM_DOC_BULK_DELETE, PERM_DOC_DOCUMENT_DELETE, PERM_DOC_STUDENT_DOCUMENT_LINK,
+    PERM_DOC_REQUIREMENT_MANAGE,
+    PERM_COM_CONSENT_UPDATE, PERM_COM_NOTIFICATION_BATCH_CREATE,
+    PERM_SUP_GRANT_APPROVE, PERM_SUP_GRANT_REVOKE,
+    PERM_BIL_INVOICE_VOID, PERM_BIL_INVOICE_GENERATE,
+    PERM_BIL_FEE_CREATE, PERM_BIL_FEE_UPDATE, PERM_BIL_FEE_ASSIGN,
+    PERM_BIL_FEE_STRUCTURE_CREATE, PERM_BIL_FEE_STRUCTURE_UPDATE,
+    PERM_BIL_FEE_STRUCTURE_DELETE, PERM_BIL_SIBLING_POLICY_MANAGE,
+    PERM_BIL_DISCOUNT_MANAGE, PERM_BIL_LATE_FEE_MANAGE,
+    PERM_BIL_PAYMENT_PLAN_CREATE, PERM_BIL_PAYMENT_PLAN_MANAGE,
+    PERM_BUDGET_CREATE, PERM_BUDGET_MANAGE, PERM_BUDGET_ALLOCATE,
+    PERM_BUDGET_TRANSACTION_CREATE,
+    PERM_SYNC_DEVICE_REGISTER, PERM_SYNC_DEVICE_MANAGE, PERM_SYNC_CONFLICT_RESOLVE,
+    PERM_FINHEALTH_COMPUTE, PERM_FINHEALTH_EXPORT,
+    PERM_CAL_EVENT_DELETE, PERM_CAL_HOLIDAY_MANAGE,
+    PERM_REWARDS_VIEW,
+    PERM_AI_GAME_CONFIG_MANAGE,
+})
+
+# SUP-only — platform super-admin / support (cross-school + platform config).
+_SUP_PLATFORM: frozenset[str] = frozenset({
+    PERM_ADM_IMPERSONATE,  # impersonation is a platform/support capability (not DIR)
+    PERM_ERP_SCHOOL_READ, PERM_ERP_ENROLLMENT_READ, PERM_ERP_ATTENDANCE_READ,
+    PERM_ADM_PLATFORM_STATS, PERM_SYS_AUDIT_LOG_READ,
+    PERM_COMPLY_CURRICULUM_MANAGE, PERM_COMPLY_SEED,
+    PERM_SUP_GRANT_REQUEST, PERM_SUP_AUDIT_READ,
+})
+
+# SYS-only — non-human automation/service account (jobs + webhooks). Narrow +
+# explicit; no inheritance. NOTE: validate against the actual worker/scheduled
+# tasks before relying — add only the job perms automation genuinely needs.
+_SYS_AUTOMATION: frozenset[str] = frozenset({
+    # Auth baseline — a service account must be able to authenticate.
+    PERM_IAM_SESSION_CREATE, PERM_IAM_SESSION_REFRESH, PERM_IAM_SESSION_REVOKE,
+    PERM_IAM_SESSION_LIST, PERM_IAM_PASSWORD_CHANGE,
+    # Jobs + webhooks
+    PERM_BIL_PAYMENT_RECONCILE, PERM_COM_NOTIFICATION_BATCH_CREATE,
+    PERM_IA_WRITING_ATTEMPT_REVIEW, PERM_COMPLY_CURRICULUM_MANAGE, PERM_COMPLY_SEED,
+    PERM_SYS_FEATURE_MANAGE, PERM_REWARDS_AWARD, PERM_REWARDS_VIEW,
+})
+
 ROLE_PERMISSIONS: dict[str, set[str]] = {
     PUBLIC: {
         PERM_IAM_SESSION_CREATE,
@@ -322,243 +447,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
     },
-    ADM: {
-        # Admin
-        PERM_ADM_USER_MANAGE,
-        PERM_ADM_SCHOOL_MANAGE,
-        PERM_PROF_ADMIN_READ,
-        PERM_GDPR_CONSENT_MANAGE,
-        # IAM — admin-only operations
-        PERM_IAM_INVITE_CREATE,
-        PERM_IAM_PARENT_LINK_CREATE,
-        PERM_IAM_PARENT_LINK_DELETE,
-        # ERP — admin-only school management
-        PERM_ERP_ENROLLMENT_ASSIGN,
-        PERM_ERP_ASSIGNMENT_UPDATE,
-        PERM_ERP_ABSENCE_REVIEW,
-        PERM_ERP_ATTENDANCE_ALERT_MANAGE,
-        # ERP — Programs (G49) — ADM manages catalog + assigns programs
-        PERM_ERP_PROGRAM_READ,
-        PERM_ERP_PROGRAM_MANAGE,
-        # ERP — Enrollment list (G49 Phase 2.b) — admin enrollments page
-        PERM_ERP_ENROLLMENT_READ,
-        # ERP — Timetable administration beyond DIR/TCH inherited baseline
-        PERM_ERP_TIMETABLE_CREATE,
-        PERM_ERP_TIMETABLE_UPDATE,
-        PERM_ERP_TIMETABLE_DELETE,
-        # Micro-school administration
-        PERM_MICRO_SCHOOL_READ,
-        PERM_MICRO_SCHOOL_MANAGE,
-        # Skill framework administration
-        PERM_SKILL_DIMENSION_MANAGE,
-        PERM_SKILL_MILESTONE_MANAGE,
-        PERM_REWARDS_VIEW,
-        # MEN compliance oversight
-        PERM_COMPLY_REPORT_READ,
-        PERM_COMPLY_REPORT_GENERATE,
-        # Document management (Phase 16) — destructive bulk action stays ADM-only
-        PERM_DOC_BULK_DELETE,
-        # COM — config/broadcast operations
-        PERM_COM_CONSENT_UPDATE,
-        PERM_COM_NOTIFICATION_BATCH_CREATE,
-        # Support
-        PERM_SUP_GRANT_APPROVE,
-        PERM_SUP_GRANT_REVOKE,
-    },
-    DIR: {
-        # Admin
-        PERM_ADM_DASHBOARD_READ,
-        PERM_ADM_USER_READ,
-        PERM_ADM_USER_CREATE,
-        PERM_ADM_INVITATION_READ,
-        PERM_ADM_AUDIT_READ,
-        PERM_ADM_IMPERSONATE,
-        PERM_ADM_SCHOOL_READ,
-        PERM_ADM_SETTINGS_READ,
-        PERM_ADM_SETTINGS_UPDATE,
-        PERM_ADM_ANNOUNCEMENT_MANAGE,
-        PERM_GDPR_DATA_DELETE,
-        # IAM — role-specific oversight
-        PERM_IAM_PARENT_LINK_READ,
-        PERM_IAM_LOGIN_HISTORY_READ,
-        # ERP / LMS oversight
-        PERM_ERP_TIMETABLE_GENERATE,
-        PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE,
-        # ERP — Programs (G49) — DIR can manage catalog + read history
-        PERM_ERP_PROGRAM_READ,
-        PERM_ERP_PROGRAM_MANAGE,
-        # ERP — Enrollment list (G49 Phase 2.b)
-        PERM_ERP_ENROLLMENT_READ,
-        PERM_LMS_COURSE_READ,
-        PERM_LMS_ACTIVITY_READ,
-        # Reporting & Analytics (Phase 14)
-        PERM_REP_ANALYTICS_READ,
-        PERM_REP_EXPORT_CREATE,
-        PERM_RPT_SCHEDULE_MANAGE,
-        # Billing — school finance management
-        PERM_BIL_INVOICE_READ,
-        PERM_BIL_INVOICE_VOID,
-        PERM_BIL_PAYMENT_READ,
-        PERM_BIL_PROOF_READ,
-        PERM_BIL_FEE_CREATE,
-        PERM_BIL_FEE_READ,
-        PERM_BIL_FEE_UPDATE,
-        PERM_BIL_FEE_ASSIGN,
-        PERM_BIL_FEE_STRUCTURE_CREATE,
-        PERM_BIL_FEE_STRUCTURE_UPDATE,
-        PERM_BIL_FEE_STRUCTURE_DELETE,
-        PERM_BIL_INVOICE_GENERATE,
-        PERM_BIL_SIBLING_POLICY_MANAGE,
-        PERM_BIL_DISCOUNT_MANAGE,
-        PERM_BIL_LATE_FEE_MANAGE,
-        PERM_BIL_PAYMENT_PLAN_CREATE,
-        PERM_BIL_PAYMENT_PLAN_READ,
-        PERM_BIL_PAYMENT_PLAN_MANAGE,
-        # Budget — class micro-budget approvals and oversight
-        PERM_BUDGET_CREATE,
-        PERM_BUDGET_READ,
-        PERM_BUDGET_MANAGE,
-        PERM_BUDGET_ALLOCATE,
-        PERM_BUDGET_REQUEST_READ,
-        PERM_BUDGET_APPROVE,
-        PERM_BUDGET_TRANSACTION_CREATE,
-        PERM_BUDGET_TRANSACTION_READ,
-        PERM_BUDGET_ANALYTICS_READ,
-        # MEN compliance reporting
-        PERM_COMPLY_REPORT_READ,
-        PERM_COMPLY_REPORT_GENERATE,
-        # Local-first sync administration
-        PERM_SYNC_DEVICE_REGISTER,
-        PERM_SYNC_DEVICE_READ,
-        PERM_SYNC_DEVICE_MANAGE,
-        PERM_SYNC_PUSH,
-        PERM_SYNC_PULL,
-        PERM_SYNC_CONFLICT_READ,
-        PERM_SYNC_CONFLICT_RESOLVE,
-        PERM_SYNC_STATUS_READ,
-        # Financial health dashboard
-        PERM_FINHEALTH_RETENTION_READ,
-        PERM_FINHEALTH_CASHFLOW_READ,
-        PERM_FINHEALTH_COST_READ,
-        PERM_FINHEALTH_SNAPSHOT_READ,
-        PERM_FINHEALTH_COMPUTE,
-        PERM_FINHEALTH_EXPORT,
-        # Calendar & Events (Phase 15)
-        PERM_CAL_EVENT_DELETE,
-        PERM_CAL_HOLIDAY_MANAGE,
-        # Document management (Phase 16)
-        PERM_DOC_DOCUMENT_DELETE,
-        PERM_DOC_STUDENT_DOCUMENT_LINK,
-        PERM_DOC_REQUIREMENT_MANAGE,
-        # COM — read + announcements (Phase 11C)
-        PERM_COM_ANNOUNCEMENT_CREATE,
-        PERM_COM_ANNOUNCEMENT_PUBLISH,
-    },
-    TCH: {
-        # IAM — login/recovery
-        PERM_IAM_SESSION_CREATE,
-        PERM_IAM_SESSION_REFRESH,
-        PERM_IAM_SESSION_REVOKE,
-        PERM_IAM_SESSION_LIST,
-        PERM_IAM_PASSWORD_CHANGE,
-        PERM_IAM_INVITE_CONSUME,
-        PERM_IAM_RECOVERY_REQUEST,
-        PERM_IAM_RECOVERY_VERIFY,
-        PERM_IAM_RECOVERY_RESET,
-        # ERP — attendance mark
-        PERM_ERP_CLASS_READ,
-        PERM_ERP_ATTENDANCE_MARK,
-        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
-        # ERP — Programs (G49) — TCH reads program catalog & student program
-        PERM_ERP_PROGRAM_READ,
-        # ERP — Timetable (Phase 11A)
-        PERM_ERP_TIMETABLE_READ,
-        PERM_ERP_TIMETABLE_EXCEPTION_CREATE,
-        PERM_ERP_TIMETABLE_EXCEPTION_READ,
-        # LMS — publish + grade + files
-        PERM_LMS_COURSE_PUBLISH,
-        PERM_LMS_ASSIGNMENT_CREATE,
-        PERM_LMS_SUBMISSION_GRADE,
-        PERM_LMS_SUBMISSION_FILE_READ,
-        PERM_LMS_CONTENT_READ,
-        PERM_LMS_ACTIVITY_READ,
-        PERM_LMS_CONTENT_ASSET_UPLOAD,
-        PERM_LMS_CONTENT_ASSET_READ,
-        PERM_LMS_CONTENT_ASSET_DELETE,
-        PERM_LMS_ASSESSMENT_CREATE,
-        PERM_LMS_ASSESSMENT_READ,
-        PERM_LMS_ASSESSMENT_PUBLISH,
-        PERM_LMS_RUBRIC_CREATE,
-        PERM_LMS_RUBRIC_READ,
-        PERM_LMS_GRADEBOOK_MANAGE,
-        PERM_LMS_GRADEBOOK_READ,
-        PERM_LMS_QUESTION_BANK_MANAGE,
-        PERM_LMS_QUESTION_BANK_READ,
-        # CMS — assign content to class + submit for review
-        PERM_CMS_CONTENT_ASSIGN,
-        PERM_CMS_CONTENT_SUBMIT,
-        # Quiz — create, manage, publish school-scoped quizzes
-        PERM_QUIZ_CREATE,
-        PERM_QUIZ_READ,
-        PERM_QUIZ_MANAGE,
-        PERM_QUIZ_PUBLISH,
-        PERM_QUIZ_ANALYTICS,
-        # Progress (Phase 11D)
-        PERM_PROGRESS_READ,
-        PERM_PROGRESS_CLASS_READ,
-        # Budget — teachers can inspect scoped allocations and submit requests
-        PERM_BUDGET_READ,
-        PERM_BUDGET_REQUEST_CREATE,
-        PERM_BUDGET_REQUEST_READ,
-        PERM_BUDGET_TRANSACTION_READ,
-        # Life-skills passport
-        PERM_SKILL_DIMENSION_READ,
-        PERM_SKILL_MILESTONE_READ,
-        PERM_SKILL_PROGRESS_READ,
-        PERM_SKILL_PROGRESS_EVALUATE,
-        PERM_SKILL_PASSPORT_READ,
-        PERM_SKILL_PASSPORT_GENERATE,
-        # Rewards
-        PERM_REWARDS_AWARD,
-        PERM_REWARDS_VIEW,
-        # MEN compliance
-        PERM_COMPLY_CURRICULUM_READ,
-        PERM_COMPLY_OBJECTIVE_READ,
-        PERM_COMPLY_MAPPING_CREATE,
-        PERM_COMPLY_MAPPING_READ,
-        # Local-first sync
-        PERM_SYNC_PUSH,
-        PERM_SYNC_PULL,
-        PERM_SYNC_STATUS_READ,
-        # Reporting (Phase 14)
-        PERM_REP_REPORT_GENERATE,
-        PERM_REP_REPORT_READ,
-        # Calendar & Events (Phase 15)
-        PERM_CAL_EVENT_CREATE,
-        PERM_CAL_EVENT_READ,
-        PERM_CAL_EVENT_UPDATE,
-        PERM_CAL_RSVP_RESPOND,
-        PERM_CAL_RSVP_READ,
-        # Document management (Phase 16)
-        PERM_DOC_DOCUMENT_UPLOAD,
-        PERM_DOC_DOCUMENT_READ,
-        PERM_DOC_RESOURCE_CREATE,
-        PERM_DOC_RESOURCE_READ,
-        PERM_DOC_RESOURCE_UPDATE,
-        PERM_DOC_RESOURCE_DELETE,
-        PERM_DOC_RESOURCE_RATE,
-        PERM_DOC_BULK_DOWNLOAD,
-        # COM — messaging (P1) + conversations (Phase 11C)
-        PERM_COM_NOTIFICATION_READ,
-        PERM_COM_MESSAGE_SEND,
-        PERM_COM_CONVERSATION_CREATE,
-        PERM_COM_CONVERSATION_READ,
-        PERM_COM_ANNOUNCEMENT_READ,
-        # IA (P1)
-        PERM_IA_REQUEST_CREATE,
-        PERM_IA_REQUEST_READ,
-        PERM_IA_REQUEST_OVERRIDE,
-    },
+    # ADM (Administration / secrétariat) — the operational engine. Sibling of
+    # DIR, NOT a superset of it (lacks DIR oversight: audit/approvals/announce).
+    ADM: set(_STAFF_BASE | _ADMIN_BASE | _ADM_OPS),
+    # DIR (Directeur — institutional head) — oversight + approvals + the
+    # institutional voice. Sibling of ADM, NOT a superset (lacks ADM operations:
+    # user/fee/settings management, timetable/budget execution). No impersonation.
+    DIR: set(_STAFF_BASE | _ADMIN_BASE | _DIR_OVERSIGHT),
+    # TCH (teacher) — the classroom baseline, shared by DIR/ADM/SUP via _STAFF_BASE,
+    # plus game-config authoring (teachers build classroom games).
+    TCH: set(_STAFF_BASE | {PERM_AI_GAME_CONFIG_MANAGE}),
     EDUCATOR: {
         # IAM — login/recovery
         PERM_IAM_SESSION_CREATE,
@@ -566,10 +464,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_SESSION_REVOKE,
         PERM_IAM_SESSION_LIST,
         PERM_IAM_PASSWORD_CHANGE,
+        PERM_IAM_INVITE_CREATE,
         PERM_IAM_INVITE_CONSUME,
+        PERM_IAM_INVITE_REVOKE,
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_ADM_INVITATION_READ,
         # Micro-school operations
         PERM_MICRO_SCHOOL_CREATE,
         PERM_MICRO_SCHOOL_READ,
@@ -584,6 +485,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_MICRO_RESOURCE_MANAGE,
         PERM_MICRO_PROGRESS_CREATE,
         PERM_MICRO_PROGRESS_READ,
+        # COM — shared shell notifications/announcements
+        PERM_COM_NOTIFICATION_READ,
+        PERM_COM_ANNOUNCEMENT_READ,
     },
     PAR: {
         # Profiles
@@ -719,34 +623,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IA_WRITING_ATTEMPT_REVIEW,
         PERM_IA_RECOMMENDATION_READ,
     },
-    SUP: {
-        # Platform-wide read / oversight beyond inherited ADM → DIR → TCH
-        PERM_ERP_SCHOOL_READ,
-        PERM_ERP_ENROLLMENT_READ,
-        PERM_ERP_ATTENDANCE_READ,
-        PERM_ADM_PLATFORM_STATS,
-        PERM_SYS_AUDIT_LOG_READ,
-        # MEN compliance reference management
-        PERM_COMPLY_CURRICULUM_MANAGE,
-        PERM_COMPLY_SEED,
-        # Support — grant lifecycle
-        PERM_SUP_GRANT_REQUEST,
-        PERM_SUP_AUDIT_READ,
-    },
-    SYS: {
-        # Service account — jobs + webhooks
-        PERM_BIL_PAYMENT_RECONCILE,
-        PERM_COM_NOTIFICATION_BATCH_CREATE,
-        PERM_IA_WRITING_ATTEMPT_REVIEW,
-        # MEN compliance reference management
-        PERM_COMPLY_CURRICULUM_MANAGE,
-        PERM_COMPLY_SEED,
-        # Feature toggles (Phase 11E)
-        PERM_SYS_FEATURE_MANAGE,
-        # Rewards
-        PERM_REWARDS_AWARD,
-        PERM_REWARDS_VIEW,
-    },
+    # SUP (platform super-admin / support) — full school capability across schools
+    # + platform-only powers (impersonation, platform stats, grant lifecycle).
+    SUP: set(
+        _STAFF_BASE | _ADMIN_BASE | _DIR_OVERSIGHT | _ADM_OPS | _SUP_PLATFORM
+    ),
+    # SYS (non-human automation/service account) — narrow + explicit, NO god-mode.
+    SYS: set(_SYS_AUTOMATION),
     CONTENT_MGR: {
         # IAM — login/recovery
         PERM_IAM_SESSION_CREATE,
@@ -788,21 +671,18 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_COM_NOTIFICATION_READ,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,
+        # AI / gamification — authoring of game configurations
+        PERM_AI_GAME_CONFIG_MANAGE,
     },
 }
 
-ROLE_HIERARCHY: dict[str, list[str]] = {
-    SYS: [SUP],
-    SUP: [ADM],
-    ADM: [DIR],
-    DIR: [TCH],
-}
-
-# Direct assignments above intentionally omit inherited permissions after the
-# hierarchy cleanup:
-# - DIR now inherits the teacher baseline from TCH.
-# - ADM now inherits the shared DIR/TCH baseline and keeps only ADM-only extras.
-# - SUP now inherits the shared ADM/DIR/TCH baseline and keeps only platform extras.
+# Role inheritance has been REMOVED. ROLE_PERMISSIONS now holds the COMPLETE,
+# explicit permission set per role (composed from the _STAFF_BASE / _ADMIN_BASE /
+# _DIR_OVERSIGHT / _ADM_OPS / _SUP_PLATFORM / _SYS_AUTOMATION bundles above), so
+# DIR (oversight) and ADM (operations) are independent SIBLINGS — neither a
+# superset of the other. Kept as an empty dict for backward compatibility with
+# get_effective_permissions() (which now simply returns the direct set).
+ROLE_HIERARCHY: dict[str, list[str]] = {}
 
 
 # ---------------------------------------------------------------------------

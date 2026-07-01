@@ -1,16 +1,31 @@
 /**
- * Age-based theme hook — adapts the UI for maternelle (3-5), primaire (6-9), college (10-13+).
+ * Age/niveau-based theme hook — adapts the UI for maternelle (3-5), primaire
+ * (6-9), college (10-13+).
  *
- * Reads `date_of_birth` from the student profile and computes an age tier.
- * Sets `data-age-tier` attribute on <html> for CSS targeting.
+ * Resolves a tier from the Moroccan school level (`class_level`) when known,
+ * otherwise from the date_of_birth, and sets `data-age-tier` on <html> for CSS
+ * targeting. Mirrors the mobile `resolveAgeTier`.
  *
- * Usage: call once in Layout when role === STD.
+ * Usage: call once in Layout when role === STD, or in any student page.
  */
 
 import { useEffect, useMemo } from 'react';
-import { useProfileData } from '@/features/profile/useProfile';
 
 export type AgeTier = 'maternelle' | 'primaire' | 'college';
+
+/**
+ * Map a Moroccan `class_level` label to a tier when recognisable.
+ * Returns null when the label is unknown (caller falls back to age/DOB).
+ */
+function niveauToTier(niveau: string): AgeTier | null {
+  const n = niveau.toLowerCase();
+  if (/maternelle|prescol|\b(ps|ms|gs)\b/.test(n)) return 'maternelle';
+  if (/primaire|\b(cp|ce1|ce2|cm1|cm2)\b/.test(n)) return 'primaire';
+  if (/college|collège|lycee|lycée|terminale|\b(6e|6eme|6ème|[1-3]\s?ac|tc|bac)\b/.test(n)) {
+    return 'college';
+  }
+  return null;
+}
 
 /**
  * Compute the student's age in full years from a date_of_birth string (YYYY-MM-DD).
@@ -39,18 +54,22 @@ function ageToTier(age: number): AgeTier {
 }
 
 /**
- * Hook: reads the student profile, computes age tier, applies `data-age-tier` to <html>.
- * Returns the current tier for conditional rendering in components.
+ * Hook: resolves the tier (niveau first, then date_of_birth, else primaire) and
+ * applies `data-age-tier` to <html>. Returns the tier for conditional rendering.
  */
-export function useAgeTheme(): AgeTier {
-  const profileQuery = useProfileData();
-
+export function useAgeTheme(
+  dateOfBirth?: string | null,
+  niveau?: string | null,
+): AgeTier {
   const tier = useMemo<AgeTier>(() => {
-    const dob = profileQuery.data?.student_profile?.date_of_birth;
-    if (!dob) return 'primaire'; // default fallback
-    const age = computeAge(dob);
+    if (niveau) {
+      const byNiveau = niveauToTier(niveau);
+      if (byNiveau) return byNiveau;
+    }
+    if (!dateOfBirth) return 'primaire'; // default fallback
+    const age = computeAge(dateOfBirth);
     return ageToTier(age);
-  }, [profileQuery.data]);
+  }, [dateOfBirth, niveau]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-age-tier', tier);

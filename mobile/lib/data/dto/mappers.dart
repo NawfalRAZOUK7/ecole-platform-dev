@@ -3,19 +3,32 @@
 /// Reference: DEC-E2-001 — Data layer handles API DTOs,
 /// presentation layer only sees domain entities.
 
-import 'package:ecole_platform/domain/entities/user.dart';
-import 'package:ecole_platform/domain/entities/feed_item.dart';
-import 'package:ecole_platform/domain/entities/notification_item.dart';
-import 'package:ecole_platform/domain/entities/notification_settings.dart';
-import 'package:ecole_platform/domain/entities/content_item.dart';
-import 'package:ecole_platform/domain/entities/result.dart';
-import 'package:ecole_platform/domain/entities/invoice.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
-import 'package:ecole_platform/domain/entities/reporting.dart';
-import 'package:ecole_platform/domain/entities/teacher.dart';
-import 'package:ecole_platform/domain/entities/calendar_event.dart';
-import 'package:ecole_platform/domain/entities/document_management.dart';
-import 'package:ecole_platform/domain/entities/program.dart';
+import 'package:ecole_platform/domain/entities/user/user.dart';
+import 'package:ecole_platform/domain/entities/content/feed_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_settings.dart';
+import 'package:ecole_platform/domain/entities/content/content_item.dart';
+import 'package:ecole_platform/domain/entities/academic/result.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/domain/entities/reports/reporting.dart';
+import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/domain/entities/communication/calendar_event.dart';
+import 'package:ecole_platform/domain/entities/content/document_management.dart';
+import 'package:ecole_platform/domain/entities/academic/program.dart';
+
+int _asInt(Object? value, {int fallback = 0}) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+double _asDouble(Object? value, {double fallback = 0}) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? fallback;
+  return fallback;
+}
 
 // ── User ──
 
@@ -26,6 +39,11 @@ User userFromJson(Map<String, dynamic> json) {
     fullName: json['full_name'] as String,
     role: json['role'] as String,
     schoolId: json['school_id'] as String,
+    schoolType: json['school_type'] as String? ?? 'formal',
+    designMode: json['design_mode'] as String?,
+    schoolSettings: json['school_settings'] is Map
+        ? Map<String, dynamic>.from(json['school_settings'] as Map)
+        : const <String, dynamic>{},
     permissions: (json['permissions'] as List<dynamic>).cast<String>(),
     memberships: (json['memberships'] as List<dynamic>)
         .map((m) => membershipFromJson(m as Map<String, dynamic>))
@@ -81,7 +99,8 @@ NotificationItem notificationFromJson(Map<String, dynamic> json) {
 }
 
 NotificationPreferenceItem notificationPreferenceFromJson(
-    Map<String, dynamic> json) {
+  Map<String, dynamic> json,
+) {
   return NotificationPreferenceItem(
     channel: json['channel'] as String,
     category: json['category'] as String,
@@ -371,10 +390,12 @@ GradesAnalytics gradesAnalyticsFromJson(Map<String, dynamic> json) {
     count: summary['count'] as int? ?? 0,
     distribution: (json['distribution'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .map((item) => AnalyticsBucket(
-              label: item['label'] as String? ?? '',
-              count: item['count'] as int? ?? 0,
-            ))
+        .map(
+          (item) => AnalyticsBucket(
+            label: item['label'] as String? ?? '',
+            count: item['count'] as int? ?? 0,
+          ),
+        )
         .toList(),
   );
 }
@@ -407,18 +428,22 @@ EngagementAnalytics engagementAnalyticsFromJson(Map<String, dynamic> json) {
     engagedUsers: summary['engaged_users'] as int? ?? 0,
     funnel: (json['funnel'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .map((item) => FunnelStage(
-              label: item['label'] as String? ?? '',
-              value: item['value'] as int? ?? 0,
-            ))
+        .map(
+          (item) => FunnelStage(
+            label: item['label'] as String? ?? '',
+            value: item['value'] as int? ?? 0,
+          ),
+        )
         .toList(),
     featureAdoption: (json['feature_adoption'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .map((item) => FeatureAdoptionMetric(
-              feature: item['feature'] as String? ?? '',
-              users: item['users'] as int? ?? 0,
-              adoptionRate: (item['adoption_rate'] as num?)?.toDouble() ?? 0,
-            ))
+        .map(
+          (item) => FeatureAdoptionMetric(
+            feature: item['feature'] as String? ?? '',
+            users: item['users'] as int? ?? 0,
+            adoptionRate: (item['adoption_rate'] as num?)?.toDouble() ?? 0,
+          ),
+        )
         .toList(),
   );
 }
@@ -555,18 +580,36 @@ LateFeePolicy lateFeePolicyFromJson(Map<String, dynamic> json) {
 }
 
 PaymentPlan paymentPlanFromJson(Map<String, dynamic> json) {
+  final installments = (json['installments'] as List<dynamic>? ?? const [])
+      .cast<Map<String, dynamic>>()
+      .map(paymentPlanInstallmentFromJson)
+      .toList();
+  final invoiceNumber = json['invoice_number']?.toString();
+  final invoiceId = json['invoice_id']?.toString();
+  final name = json['name']?.toString() ??
+      (invoiceNumber == null || invoiceNumber.isEmpty
+          ? 'Plan de paiement'
+          : 'Plan $invoiceNumber');
+
   return PaymentPlan(
     id: json['id'] as String? ?? '',
-    studentId: json['student_id'] as String? ?? '',
-    studentName: json['student_name'] as String?,
-    name: json['name'] as String? ?? '',
-    totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0,
-    startDate: json['start_date'] as String? ?? '',
+    studentId:
+        (json['student_id'] ?? json['parent_id'] ?? invoiceId ?? '').toString(),
+    studentName: (json['student_name'] ?? json['parent_name'] ?? invoiceNumber)
+        ?.toString(),
+    name: name,
+    totalAmount: _asDouble(
+      json['total_amount'] ?? json['invoice_total_amount'],
+    ),
+    startDate: json['start_date'] as String? ??
+        json['issued_date'] as String? ??
+        json['created_at'] as String? ??
+        '',
     status: json['status'] as String? ?? 'active',
-    installments: (json['installments'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map(paymentPlanInstallmentFromJson)
-        .toList(),
+    installments: installments,
+    installmentCount: installments.isNotEmpty
+        ? installments.length
+        : _asInt(json['total_installments']),
     createdAt: json['created_at'] as String? ?? '',
   );
 }
@@ -590,15 +633,27 @@ DashboardStats dashboardStatsFromJson(Map<String, dynamic> json) {
   final rolesMap = <String, int>{};
   final roles = json['users_by_role'] as Map<String, dynamic>? ?? {};
   for (final entry in roles.entries) {
-    rolesMap[entry.key] = (entry.value as num).toInt();
+    rolesMap[entry.key] = _asInt(entry.value);
   }
+  final rewardsSummaryJson =
+      json['rewards_summary'] as Map<String, dynamic>? ?? const {};
   return DashboardStats(
-    totalUsers: json['total_users'] as int? ?? 0,
-    activeSessions: json['active_sessions'] as int? ?? 0,
-    activeInvitations: json['active_invitations'] as int? ?? 0,
-    auditEvents24h: json['audit_events_24h'] as int? ?? 0,
-    pendingJustifications: json['pending_justifications'] as int? ?? 0,
+    totalUsers: _asInt(json['users'] ?? json['total_users']),
+    activeSessions: _asInt(json['active_sessions']),
+    activeInvitations: _asInt(json['active_invitations']),
+    auditEvents24h: _asInt(json['audit_events_24h']),
+    pendingJustifications: _asInt(json['pending_justifications']),
     usersByRole: rolesMap,
+    rewardsSummary: rewardsSummaryFromJson(rewardsSummaryJson),
+  );
+}
+
+RewardsSummary rewardsSummaryFromJson(Map<String, dynamic> json) {
+  return RewardsSummary(
+    starsAwardedWeek: _asInt(json['stars_awarded_week']),
+    starsAwardedMonth: _asInt(json['stars_awarded_month']),
+    mostActiveClass: json['most_active_class'] as String?,
+    recentRewardEvents: _asInt(json['recent_reward_events']),
   );
 }
 
@@ -757,7 +812,8 @@ AcademicTimelineEntry academicTimelineEntryFromJson(Map<String, dynamic> json) {
 }
 
 ProgramAssignmentEvent programAssignmentEventFromJson(
-    Map<String, dynamic> json) {
+  Map<String, dynamic> json,
+) {
   final wire = json['reason_code'] as String;
   return ProgramAssignmentEvent(
     id: json['id'] as String,

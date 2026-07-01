@@ -19,9 +19,9 @@ from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.lms import LMSRepository
 from app.schemas.lms import AssessmentCreateRequest, AssessmentResultSubmitRequest
-from app.services.audit import AuditService
+from app.services.platform.audit import AuditService
 from app.services.lms._helpers import LMSServiceBase
-from app.services.progress import ProgressService as DashboardProgressService
+from app.services.academic.progress import ProgressService as DashboardProgressService
 
 
 class ProgressService(LMSServiceBase):

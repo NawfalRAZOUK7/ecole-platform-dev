@@ -1,22 +1,23 @@
 # 🚀 Déploiement
 
 > **Chemins de déploiement supportés**
-> - **Production / staging** → **Kubernetes via Helm** (chemin recommandé). Voir `docs/KUBERNETES_SETUP.md` et la section *Kubernetes (Helm)* ci-dessous.
+>
+> - **Production / staging** → **Kubernetes via Helm** (chemin recommandé). Voir `infra/docs/KUBERNETES_SETUP.md` et la section _Kubernetes (Helm)_ ci-dessous.
 > - **Dev local sans K8s** → **Docker Compose** (chemin historique, conservé pour vélocité de développement).
 > - **Dev K8s local** → **Kind** (`scripts/k8s-local-up.sh`) pour valider le chart Helm avant push.
 > - **Rollout sans K8s** → compositions **blue-green** (`docker-compose.blue.yml` / `.green.yml`) pour les environnements sans orchestrateur.
 
 ## Environnements
 
-| Env            | Mode privilégié      | Fichier de référence                                     | Description                         |
-| -------------- | -------------------- | -------------------------------------------------------- | ----------------------------------- |
-| **Dev**        | Compose              | `infra/docker-compose.dev.yml` (+ MinIO)                 | Hot reload, logs debug, DB locale   |
-| **Dev K8s**    | Kind + Helm          | `scripts/k8s-local-up.sh` + `infra/k8s/values-local.yaml` | Cluster local `ecole-dev`           |
-| **Staging**    | Helm                 | `infra/k8s/values-staging.yaml`                          | Cluster staging, SSL, proche prod   |
-| **Staging-CP** | Compose blue-green   | `infra/docker-compose.staging.yml`                       | Compose équivalent (fallback)       |
-| **Prod**       | Helm                 | `infra/k8s/values-prod.yaml`                             | HA, HPA, NetworkPolicy, backups     |
-| **Prod-CP**    | Compose blue-green   | `infra/docker-compose.{blue,green}.yml`                  | Bascule blue-green pour env. on-prem|
-| **Monitoring** | Compose              | `infra/docker-compose.monitoring.yml`                    | Prometheus + Grafana + Loki + Tempo |
+| Env            | Mode privilégié    | Fichier de référence                                      | Description                          |
+| -------------- | ------------------ | --------------------------------------------------------- | ------------------------------------ |
+| **Dev**        | Compose            | `infra/docker-compose.dev.yml` (+ MinIO)                  | Hot reload, logs debug, DB locale    |
+| **Dev K8s**    | Kind + Helm        | `scripts/k8s-local-up.sh` + `infra/k8s/values-local.yaml` | Cluster local `ecole-dev`            |
+| **Staging**    | Helm               | `infra/k8s/values-staging.yaml`                           | Cluster staging, SSL, proche prod    |
+| **Staging-CP** | Compose blue-green | `infra/docker-compose.staging.yml`                        | Compose équivalent (fallback)        |
+| **Prod**       | Helm               | `infra/k8s/values-prod.yaml`                              | HA, HPA, NetworkPolicy, backups      |
+| **Prod-CP**    | Compose blue-green | `infra/docker-compose.{blue,green}.yml`                   | Bascule blue-green pour env. on-prem |
+| **Monitoring** | Compose            | `infra/docker-compose.monitoring.yml`                     | Prometheus + Grafana + Loki + Tempo  |
 
 ---
 

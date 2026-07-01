@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:ecole_platform/shared/ui/motion.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/radii.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
@@ -17,8 +18,10 @@ final ThemeData appLightTheme = ThemeData(
   ),
   extensions: const <ThemeExtension<dynamic>>[
     AppThemeColors.light,
+    KidsThemeColors.light,
   ],
   useMaterial3: true,
+  pageTransitionsTheme: appPageTransitionsTheme,
   fontFamily: 'Cairo',
   scaffoldBackgroundColor: AppColors.background,
   appBarTheme: const AppBarTheme(
@@ -36,9 +39,9 @@ final ThemeData appLightTheme = ThemeData(
   ),
   cardTheme: CardThemeData(
     elevation: 1,
-    color: AppColors.background,
+    color: AppColors.surface,
     surfaceTintColor: Colors.transparent,
-    shadowColor: Colors.black.withOpacity(0.08),
+    shadowColor: Colors.black.withValues(alpha: 0.08),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.lg),
       side: const BorderSide(color: AppColors.border),
@@ -86,7 +89,7 @@ final ThemeData appLightTheme = ThemeData(
     ).copyWith(
       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
         if (states.contains(WidgetState.disabled)) {
-          return AppColors.primary.withOpacity(0.38);
+          return AppColors.primary.withValues(alpha: 0.38);
         }
         return AppColors.primary;
       }),
@@ -101,7 +104,27 @@ final ThemeData appLightTheme = ThemeData(
         return 3;
       }),
       shadowColor: WidgetStateProperty.all(
-        AppColors.primary.withOpacity(0.35),
+        AppColors.primary.withValues(alpha: 0.35),
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      foregroundColor: AppColors.primary,
+      side: const BorderSide(color: AppColors.primary, width: 1.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: AppColors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
     ),
   ),

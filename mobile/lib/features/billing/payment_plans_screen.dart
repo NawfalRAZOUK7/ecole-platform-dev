@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/invoice.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
@@ -43,32 +44,40 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
     final shouldCreate = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create payment plan'),
+        title: Text(AppLocalizations.of(ref).t('billing.createPaymentPlan')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: studentController,
-                decoration: const InputDecoration(labelText: 'Student ID'),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(ref).t('billing.studentId'),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Plan name'),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(ref).t('billing.planName'),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: totalController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration:
-                    const InputDecoration(labelText: 'Total amount (MAD)'),
+                decoration: InputDecoration(
+                  labelText:
+                      AppLocalizations.of(ref).t('billing.totalAmountMad'),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: startController,
-                decoration: const InputDecoration(labelText: 'Start date'),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(ref).t('billing.startDate'),
+                ),
               ),
               const SizedBox(height: 16),
               for (var index = 0; index < dueControllers.length; index++) ...[
@@ -78,7 +87,9 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                       child: TextField(
                         controller: dueControllers[index],
                         decoration: InputDecoration(
-                          labelText: 'Due date ${index + 1}',
+                          labelText:
+                              '${AppLocalizations.of(ref).t('billing.dueDate')} '
+                              '${index + 1}',
                         ),
                       ),
                     ),
@@ -87,9 +98,12 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                       child: TextField(
                         controller: amountControllers[index],
                         keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
-                          labelText: 'Amount ${index + 1}',
+                          labelText:
+                              '${AppLocalizations.of(ref).t('billing.amount')} '
+                              '${index + 1}',
                         ),
                       ),
                     ),
@@ -107,7 +121,7 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Create'),
+            child: Text(AppLocalizations.of(ref).t('common.create')),
           ),
         ],
       ),
@@ -144,9 +158,7 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
           );
       ref.invalidate(paymentPlansProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment plan created')),
-      );
+      AppSnackBar.show(context, 'Payment plan created');
     } finally {
       setState(() => _creating = false);
       for (final controller in [
@@ -223,7 +235,7 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                           leading: const Icon(Icons.event_note_outlined),
                           title: Text(plan.name),
                           subtitle: Text(
-                            '${plan.studentName ?? plan.studentId} · ${plan.installments.length} installments',
+                            '${plan.studentName ?? plan.studentId} · ${plan.installmentCount} échéance(s)',
                           ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -262,7 +274,7 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.add_outlined),
-        label: const Text('Create plan'),
+        label: Text(t.t('billing.createPlan')),
       ),
     );
   }

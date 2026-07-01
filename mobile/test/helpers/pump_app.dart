@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/l10n/app_localizations.dart';
-import 'package:ecole_platform/shared/secure_storage.dart';
+import 'package:ecole_platform/core/storage/secure_storage.dart';
 import 'package:ecole_platform/shared/ui/app_theme.dart';
 import 'package:ecole_platform/shared/ui/app_theme_dark.dart';
 

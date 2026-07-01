@@ -1,0 +1,64 @@
+{
+  "info": {
+    "name": "École Platform - Multi-Role Login Tests",
+    "description": "Data-driven login tests for multiple user roles (ADM, TCH, PAR, STD). Run with: newman run scenario_multi_role_login.postman_collection.json -d data_users.csv -e env_scenarios.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Login with different roles",
+      "item": [
+        {
+          "name": "POST /auth/login ({{role}})",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "responseBody = pm.response.json();",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    pm.expect(responseBody.data).to.have.property(\"access_token\");",
+                  "});",
+                  "",
+                  "",
+                  "// Save token for subsequent requests",
+                  "pm.environment.set(\"token\", responseBody.data.access_token);",
+                  "// Skipped: login response does not include user object",
+                  "",
+                  "console.log(\"Login successful for role: \" + pm.iterationData.get(\"role\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

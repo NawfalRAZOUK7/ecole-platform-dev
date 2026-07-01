@@ -2,6 +2,8 @@
 
 Log-based alerting rules for the Ecole Platform. Loki monitors logs and fires alerts based on error patterns, security events, and anomalies.
 
+Domain-specific rules should use backend bounded context names in labels or annotations: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
+
 ## Files
 
 - **ecole-alerts.yml** - Alert rules for application and infrastructure monitoring
@@ -15,7 +17,7 @@ Log-based alerting rules for the Ecole Platform. Loki monitors logs and fires al
 - Uncaught exception patterns
 
 ### Security Alerts
-- Failed authentication attempts (multiple retries)
+- Failed authentication attempts in the `auth` context (multiple retries)
 - Unauthorized API access attempts
 - Suspicious SQL patterns
 - Rate limit threshold breaches
@@ -109,7 +111,7 @@ curl 'http://localhost:3100/loki/api/v1/query?query={job="ecole-backend"}%20|%20
 
 Current thresholds (customize per environment):
 - Error rate alert: >5% over 5 minutes
-- Failed auth alert: >10 failures in 1 minute
+- Failed `auth` alert: >10 failures in 1 minute
 - Critical error alert: >20 errors in 1 minute
 - Slow query alert: >1s response time
 

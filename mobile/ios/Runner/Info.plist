@@ -55,5 +55,22 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>ma.ecoleplatform.auth</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>ecoleplatform</string>
+				</array>
+			</dict>
+		</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Dev only: allow cleartext HTTP to the local/LAN backend during development. -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 	</dict>
+</dict>
 </plist>

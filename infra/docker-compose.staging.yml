@@ -21,6 +21,13 @@ services:
     # No host-exposed ports in staging — access via pgbouncer only
     expose:
       - "5432"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 256M
     volumes:
       - staging_postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -85,6 +92,13 @@ services:
     networks:
       - ecole-staging-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
 
   # ==================== Redis 7 (Stage) ====================
   redis:
@@ -109,6 +123,13 @@ services:
     networks:
       - ecole-staging-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
 
   # ==================== FastAPI Backend (Stage) ====================
   backend:
@@ -129,7 +150,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.ecole-platform.example}
       ENABLE_TRACING: "true"
       ENABLE_STRICT_RATE_LIMIT: "false"
-      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-false}
       AI_PROVIDER: ${AI_PROVIDER:-mock}
       SMTP_HOST: ${SMTP_HOST:-localhost}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -258,6 +279,12 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: ecole-staging-web
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     networks:
       - ecole-staging-network
     restart: unless-stopped
@@ -285,8 +312,10 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
-      - web
+      backend:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost/api/v1/health || exit 1"]
       interval: 30s

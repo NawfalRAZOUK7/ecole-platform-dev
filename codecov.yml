@@ -1,0 +1,16 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+flags:
+  backend:
+    paths: [backend/app/]
+  web:
+    paths: [web/src/]
+  mobile:
+    paths: [mobile/lib/]

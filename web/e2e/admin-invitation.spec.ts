@@ -71,7 +71,7 @@ test.describe('J4 — Admin invitation journey', () => {
     await expect(page).toHaveURL(/\/admin/);
 
     // 3. Navigate to invitations
-    await page.locator('a[href="/admin/invitations"]').click();
+    await page.goto('/admin/invitations');
     await expect(page).toHaveURL(/\/admin\/invitations/);
     await page.waitForLoadState('networkidle');
 

@@ -12,13 +12,13 @@ from pydantic import ValidationError as PydanticValidationError
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.financial_health import (
+from app.schemas.reports.financial_health import (
     CashflowForecastComputeRequest,
     CostPerStudentComputeRequest,
     FinancialSnapshotComputeRequest,
     RetentionComputeRequest,
 )
-from app.services.financial_health_service import FinancialHealthService
+from app.services.reports.financial_health_service import FinancialHealthService
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -196,19 +196,19 @@ class TestFinancialHealthServiceEdges:
                 return None
 
         monkeypatch.setattr(
-            "app.services.financial_health_service.UnitOfWork",
+            "app.services.reports.financial_health_service.UnitOfWork",
             lambda _db: FakeUnitOfWork(),
         )
         monkeypatch.setattr(
-            "app.services.financial_health_service.FinancialHealthRepository",
+            "app.services.reports.financial_health_service.FinancialHealthRepository",
             lambda _session: repo_in_uow,
         )
         monkeypatch.setattr(
-            "app.services.financial_health_service.AuditService",
+            "app.services.reports.financial_health_service.AuditService",
             lambda _session: audit,
         )
         monkeypatch.setattr(
-            "app.services.financial_health_service.EventDispatcher",
+            "app.services.reports.financial_health_service.EventDispatcher",
             lambda _session: dispatcher,
         )
 

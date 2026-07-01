@@ -2,9 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/financial_health.dart';
-import 'package:ecole_platform/features/financial-health/financial_dashboard_screen.dart';
-import 'package:ecole_platform/features/financial-health/financial_snapshots_screen.dart';
+import 'package:ecole_platform/domain/entities/reports/financial_health.dart';
+import 'package:ecole_platform/features/reports/financial_health/financial_dashboard_screen.dart';
+import 'package:ecole_platform/features/reports/financial_health/financial_snapshots_screen.dart';
 
 import '../helpers/mock_repositories.dart';
 import '../helpers/pump_app.dart';
@@ -85,9 +85,17 @@ void _stubDashboard(MockFinancialHealthRepository repository) {
   when(() => repository.listCashflowForecasts()).thenAnswer(
     (_) async => const [
       CashflowForecast(
-          label: 'Jan', inflow: 100000, outflow: 80000, net: 20000),
+        label: 'Jan',
+        inflow: 100000,
+        outflow: 80000,
+        net: 20000,
+      ),
       CashflowForecast(
-          label: 'Feb', inflow: 105000, outflow: 81000, net: 24000),
+        label: 'Feb',
+        inflow: 105000,
+        outflow: 81000,
+        net: 24000,
+      ),
     ],
   );
 }

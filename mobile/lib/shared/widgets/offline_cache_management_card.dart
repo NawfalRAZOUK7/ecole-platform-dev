@@ -111,8 +111,11 @@ class _OfflineCacheManagementCardState
             // ── Header ─────────────────────────────────────────────────────────
             Row(
               children: <Widget>[
-                Icon(Icons.download_done_rounded,
-                    color: colorScheme.primary, size: 22),
+                Icon(
+                  Icons.download_done_rounded,
+                  color: colorScheme.primary,
+                  size: 22,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -161,7 +164,8 @@ class _OfflineCacheManagementCardState
                         Text(
                           _formatBytes(_totalBytes ?? 0),
                           style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant),
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),

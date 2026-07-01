@@ -13,9 +13,9 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/data/local_store/cache_store.dart';
-import 'package:ecole_platform/data/services/signed_url_cache.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
+import 'package:ecole_platform/core/network/signed_url_cache.dart';
 
 // ── Download status ───────────────────────────────────────────────────────────
 
@@ -101,7 +101,9 @@ class OfflineContentManager {
     if (_states[contentItemId]?.isDownloading ?? false) return;
 
     _updateState(
-        contentItemId, const DownloadState(status: DownloadStatus.downloading));
+      contentItemId,
+      const DownloadState(status: DownloadStatus.downloading),
+    );
 
     try {
       // 1. Fetch and cache metadata with long TTL
@@ -150,8 +152,10 @@ class OfflineContentManager {
       manifest[contentItemId] = assetIds;
       await _writeManifest(manifest);
 
-      _updateState(contentItemId,
-          const DownloadState(status: DownloadStatus.done, progress: 1));
+      _updateState(
+        contentItemId,
+        const DownloadState(status: DownloadStatus.done, progress: 1),
+      );
     } catch (e) {
       _updateState(
         contentItemId,
@@ -175,7 +179,9 @@ class OfflineContentManager {
 
   /// Returns the local file path for a downloaded asset, or null if missing.
   Future<String?> getOfflineAssetPath(
-      String contentItemId, String assetId) async {
+    String contentItemId,
+    String assetId,
+  ) async {
     final dir = await _offlineDir();
     final file = File('${dir.path}/$contentItemId/$assetId');
     if (await file.exists()) return file.path;
