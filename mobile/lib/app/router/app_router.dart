@@ -51,7 +51,9 @@ import 'package:ecole_platform/features/billing/budgets/budget_request_screen.da
 import 'package:ecole_platform/features/school/micro_schools/micro_school_detail_screen.dart';
 import 'package:ecole_platform/features/school/micro_schools/micro_school_enroll_screen.dart';
 import 'package:ecole_platform/features/school/micro_schools/micro_school_list_screen.dart';
+import 'package:ecole_platform/features/academic/teacher/assessments_screen.dart';
 import 'package:ecole_platform/features/academic/teacher/classes_screen.dart';
+import 'package:ecole_platform/features/academic/teacher/courses_screen.dart';
 import 'package:ecole_platform/features/lms/teacher/assignment_form_screen.dart';
 import 'package:ecole_platform/features/lms/teacher/submissions_screen.dart';
 import 'package:ecole_platform/features/academic/teacher/attendance_screen.dart';
@@ -144,6 +146,8 @@ const _routeRoles = <String, Set<String>>{
   '/micro-schools/:id/enroll': {'EDUCATOR', 'ADM', 'DIR', 'PAR'},
   '/micro-schools/:id': {'EDUCATOR', 'ADM', 'DIR', 'PAR'},
   '/teacher/classes': {'TCH'},
+  '/teacher/courses': {'TCH'},
+  '/teacher/assessments': {'TCH'},
   '/teacher/assignments': {'TCH'},
   '/teacher/submissions': {'TCH'},
   '/teacher/attendance': {'TCH'},
@@ -473,6 +477,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/teacher/classes',
             builder: (context, state) => const ClassesScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/courses',
+            builder: (context, state) => const CoursesScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/assessments',
+            builder: (context, state) => const AssessmentsScreen(),
           ),
           GoRoute(
             path: '/teacher/assignments',

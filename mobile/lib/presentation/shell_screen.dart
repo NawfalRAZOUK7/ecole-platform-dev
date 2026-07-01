@@ -122,6 +122,20 @@ const _allNavItems = [
     groupKey: 'shell.group.academic',
   ),
   _NavItem(
+    route: '/teacher/courses',
+    icon: Icons.menu_book_outlined,
+    labelKey: 'courses.title',
+    roles: ['TCH'],
+    groupKey: 'shell.group.academic',
+  ),
+  _NavItem(
+    route: '/teacher/assessments',
+    icon: Icons.assignment_turned_in_outlined,
+    labelKey: 'assessments.title',
+    roles: ['TCH'],
+    groupKey: 'shell.group.academic',
+  ),
+  _NavItem(
     route: '/teacher/content-library',
     icon: Icons.library_books,
     labelKey: 'shell.library',
