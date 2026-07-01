@@ -396,6 +396,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Card(
               child: ListTile(
                 leading: Icon(
+                  Icons.history,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(t.t('loginHistory.title')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/profile/login-history'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: Icon(
+                  Icons.devices_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(t.t('sessions.title')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/profile/sessions'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: Icon(
                   Icons.privacy_tip_outlined,
                   color: theme.colorScheme.primary,
                 ),

@@ -12,7 +12,9 @@ import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
 import 'package:ecole_platform/features/onboarding/apply_screen.dart';
 import 'package:ecole_platform/features/onboarding/activate_screen.dart';
+import 'package:ecole_platform/features/auth/login_history_screen.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
+import 'package:ecole_platform/features/auth/sessions_screen.dart';
 import 'package:ecole_platform/features/auth/register_screen.dart';
 import 'package:ecole_platform/features/auth/reset_password_screen.dart';
 import 'package:ecole_platform/features/content/coloring/coloring_list_screen.dart';
@@ -243,6 +245,26 @@ const _routeRoles = <String, Set<String>>{
     'CONTENT_MGR',
   },
   '/profile/password': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '/profile/login-history': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '/profile/sessions': {
     'PAR',
     'STD',
     'TCH',
@@ -801,6 +823,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'password',
                 builder: (context, state) => const ChangePasswordScreen(),
+              ),
+              GoRoute(
+                path: 'login-history',
+                builder: (context, state) => const LoginHistoryScreen(),
+              ),
+              GoRoute(
+                path: 'sessions',
+                builder: (context, state) => const SessionsScreen(),
               ),
             ],
           ),
