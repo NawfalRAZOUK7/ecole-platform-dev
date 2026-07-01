@@ -246,6 +246,13 @@ const _allNavItems = [
     groupKey: 'shell.group.academic',
   ),
   _NavItem(
+    route: '/student/activities',
+    icon: Icons.auto_awesome_outlined,
+    labelKey: 'activities.title',
+    roles: ['STD'],
+    groupKey: 'shell.group.academic',
+  ),
+  _NavItem(
     route: '/skills',
     icon: Icons.psychology_outlined,
     labelKey: 'shell.skills',

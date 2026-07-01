@@ -24,6 +24,7 @@ import 'package:ecole_platform/features/ai/games/screens/memory_match_screen.dar
 import 'package:ecole_platform/features/ai/games/screens/sorting_game_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/vocabulary_cards_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/letter_puzzle_screen.dart';
+import 'package:ecole_platform/features/ai/activities/activities_screen.dart';
 import 'package:ecole_platform/features/ai/games/mini_games_screen.dart';
 import 'package:ecole_platform/features/communication/notifications/notifications_screen.dart';
 import 'package:ecole_platform/features/communication/notifications/notification_preferences_screen.dart';
@@ -166,6 +167,7 @@ const _routeRoles = <String, Set<String>>{
   '/student/quizzes': {'STD'},
   '/student/writing': {'STD'},
   '/student/games': {'STD'},
+  '/student/activities': {'STD'},
   '/games/memory': {'STD'},
   '/games/sorting': {'STD'},
   '/games/vocabulary': {'STD'},
@@ -579,6 +581,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/student/games',
             builder: (context, state) => const MiniGamesScreen(),
+          ),
+          GoRoute(
+            path: '/student/activities',
+            builder: (context, state) => const ActivitiesScreen(),
           ),
           GoRoute(
             path: '/games/memory',
